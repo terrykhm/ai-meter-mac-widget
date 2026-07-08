@@ -58,25 +58,24 @@ which requires an Admin API key from an API organization.
   neither target is App-Sandboxed, which is fine for running the app
   locally but would need revisiting before any Mac App Store submission.
 
-### 2. Fill in the placeholders
+### 2. Fill in the placeholder
 
-Two tokens are used as placeholders and must be replaced with real values,
-**consistently, everywhere they appear** — both only in `project.yml`:
+One token is used as a placeholder in `project.yml` and must be replaced
+with a real value everywhere it appears:
 
 | Placeholder | Replace with |
 |---|---|
 | `REPLACE_ME_BUNDLE_PREFIX` | Your reverse-DNS prefix, e.g. `com.yourname` |
-| `REPLACE_ME_TEAM_ID` | Your Apple Developer Team ID (Xcode → Settings → Accounts → your Apple ID → shows the Team ID, including for a free Personal Team) |
-
-A quick way to do the replacement from the repo root:
 
 ```sh
-sed -i '' 's/REPLACE_ME_BUNDLE_PREFIX/com.yourname/g; s/REPLACE_ME_TEAM_ID/YOUR_TEAM_ID/g' project.yml
+sed -i '' 's/REPLACE_ME_BUNDLE_PREFIX/com.yourname/g' project.yml
 ```
 
-(Alternatively, leave `DEVELOPMENT_TEAM` out and just pick your team from
-the Signing & Capabilities dropdown after opening the project in Xcode —
-either works.)
+There's no Team ID placeholder to fill in — `project.yml` intentionally
+leaves signing on Automatic with no `DEVELOPMENT_TEAM` set, because a free
+Personal Team often doesn't show a findable Team ID string anywhere in
+Xcode's Accounts pane (just your email). You pick the team visually
+instead, in step 3.
 
 ### 3. Generate and open the Xcode project
 
@@ -86,9 +85,17 @@ open ClaudeUsage.xcodeproj
 ```
 
 In Xcode, for **both** targets (`ClaudeUsageMenuBar` and
-`ClaudeUsageWidgetExtension`), go to Signing & Capabilities and select your
-Team (a free Personal Team works). No other capabilities need adding —
-there's no App Group or Keychain Sharing group to configure.
+`ClaudeUsageWidgetExtension`): Signing & Capabilities → "Team" dropdown →
+select your name/email (shown as "*Your Name* (Personal Team)"). No other
+capabilities need adding — there's no App Group or Keychain Sharing group
+to configure. The first time you do this, Xcode silently creates a local
+signing certificate for you if you don't already have one.
+
+If you ever do need the raw Team ID string (e.g. for CI, or filling in
+`DEVELOPMENT_TEAM` by hand): open Keychain Access → login keychain → "My
+Certificates" → find the certificate Xcode created (something like "Apple
+Development: you@example.com") → double-click it → the "Organizational
+Unit" field is your Team ID.
 
 Build and run (`ClaudeUsageMenuBar` scheme).
 
