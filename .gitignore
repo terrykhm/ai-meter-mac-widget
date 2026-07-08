@@ -1,0 +1,22 @@
+# Xcode / XcodeGen
+*.xcodeproj/
+*.xcworkspace/
+xcuserdata/
+DerivedData/
+*.moved-aside
+*.hmap
+*.ipa
+*.dSYM.zip
+*.dSYM
+
+# Swift Package Manager
+.build/
+.swiftpm/
+Packages/ClaudeUsageKit/.build/
+
+# macOS
+.DS_Store
+
+# Local secrets / captured session data (never commit real cookies or endpoint captures with live data)
+*.env
+Docs/ENDPOINT_NOTES.local.md
