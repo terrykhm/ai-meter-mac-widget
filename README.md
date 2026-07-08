@@ -34,8 +34,8 @@ which requires an Admin API key from an API organization.
 ## What's in this repo
 
 - `Packages/ClaudeUsageKit/` — shared, UI-free Swift package: usage data
-  models, the (unofficial) networking client, App-Group-backed shared
-  storage, and the polling coordinator. Used by both targets below.
+  models, the (unofficial) networking client, shared-file-backed storage,
+  and the polling coordinator. Used by both targets below.
 - `App/ClaudeUsageMenuBar/` — the menu bar app: sign-in flow, popover UI,
   settings.
 - `Widget/ClaudeUsageWidgetExtension/` — the WidgetKit extension (Small +
@@ -49,37 +49,34 @@ which requires an Admin API key from an API organization.
 
 - Xcode + Command Line Tools installed.
 - [XcodeGen](https://github.com/yonaskolb/XcodeGen): `brew install xcodegen`
-- An Apple Developer account (free tier is enough for local, personal use)
-  to get a Team ID for code signing.
+- An Apple ID signed into Xcode (Xcode → Settings → Accounts). A free
+  "Personal Team" is enough — no paid Apple Developer Program membership
+  needed. That's exactly why the app and widget share data through a
+  plain file (`~/Library/Application Support/ClaudeUsage/`) instead of an
+  App Group: Apple restricts the App Groups capability to paid accounts,
+  and this app deliberately avoids needing it. The trade-off is that
+  neither target is App-Sandboxed, which is fine for running the app
+  locally but would need revisiting before any Mac App Store submission.
 
 ### 2. Fill in the placeholders
 
-Two tokens are used as placeholders throughout the repo and must be
-replaced with real values, **consistently, everywhere they appear**:
+Two tokens are used as placeholders and must be replaced with real values,
+**consistently, everywhere they appear** — both only in `project.yml`:
 
 | Placeholder | Replace with |
 |---|---|
 | `REPLACE_ME_BUNDLE_PREFIX` | Your reverse-DNS prefix, e.g. `com.yourname` |
-| `REPLACE_ME_TEAM_ID` | Your Apple Developer Team ID (Xcode → Settings → Accounts) |
-
-They appear in:
-- `project.yml`
-- `App/ClaudeUsageMenuBar/ClaudeUsageMenuBar.entitlements`
-- `Widget/ClaudeUsageWidgetExtension/ClaudeUsageWidgetExtension.entitlements`
-- `Packages/ClaudeUsageKit/Sources/ClaudeUsageKit/Storage/AppGroupConstants.swift`
-
-The App Group identifier in particular (`group.<prefix>.claudeusage`) must
-be **identical** in all four locations, or the app and widget won't be able
-to share data.
+| `REPLACE_ME_TEAM_ID` | Your Apple Developer Team ID (Xcode → Settings → Accounts → your Apple ID → shows the Team ID, including for a free Personal Team) |
 
 A quick way to do the replacement from the repo root:
 
 ```sh
-grep -rl 'REPLACE_ME_BUNDLE_PREFIX' . --include='*.yml' --include='*.entitlements' --include='*.swift' \
-  | xargs sed -i '' 's/REPLACE_ME_BUNDLE_PREFIX/com.yourname/g'
-grep -rl 'REPLACE_ME_TEAM_ID' . --include='*.yml' \
-  | xargs sed -i '' 's/REPLACE_ME_TEAM_ID/YOUR_TEAM_ID/g'
+sed -i '' 's/REPLACE_ME_BUNDLE_PREFIX/com.yourname/g; s/REPLACE_ME_TEAM_ID/YOUR_TEAM_ID/g' project.yml
 ```
+
+(Alternatively, leave `DEVELOPMENT_TEAM` out and just pick your team from
+the Signing & Capabilities dropdown after opening the project in Xcode —
+either works.)
 
 ### 3. Generate and open the Xcode project
 
@@ -89,12 +86,9 @@ open ClaudeUsage.xcodeproj
 ```
 
 In Xcode, for **both** targets (`ClaudeUsageMenuBar` and
-`ClaudeUsageWidgetExtension`):
-- Signing & Capabilities → select your Team.
-- Add capability "App Groups" → check the same
-  `group.<prefix>.claudeusage` group on both targets.
-- On `ClaudeUsageMenuBar` only, add capability "Keychain Sharing" with the
-  access group matching `ClaudeUsageMenuBar.entitlements`.
+`ClaudeUsageWidgetExtension`), go to Signing & Capabilities and select your
+Team (a free Personal Team works). No other capabilities need adding —
+there's no App Group or Keychain Sharing group to configure.
 
 Build and run (`ClaudeUsageMenuBar` scheme).
 

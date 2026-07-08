@@ -1,7 +1,7 @@
 import Foundation
 import WidgetKit
 
-/// Owns periodic polling: fetch -> map -> write to the App Group -> tell
+/// Owns periodic polling: fetch -> map -> write to shared storage -> tell
 /// WidgetKit to reload. Only ever instantiated by the app target — the
 /// widget extension never fetches on its own, it only reads what this
 /// writes.

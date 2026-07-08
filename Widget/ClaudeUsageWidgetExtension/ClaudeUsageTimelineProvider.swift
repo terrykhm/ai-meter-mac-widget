@@ -7,7 +7,7 @@ struct UsageWidgetEntry: TimelineEntry {
     let errorState: FetchErrorState
 }
 
-/// Reads whatever the app last wrote to the App Group container. Never
+/// Reads whatever the app last wrote to the shared storage location. Never
 /// makes a network call and never touches Keychain — if the app isn't
 /// running, this just keeps re-showing (and re-scheduling reloads of) the
 /// last known snapshot.

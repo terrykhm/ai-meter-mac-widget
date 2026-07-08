@@ -1,43 +1,43 @@
 import Foundation
 
-/// Reads/writes the latest usage snapshot to the App Group container so the
-/// widget extension can display it without ever making network calls or
-/// touching Keychain itself.
+/// Reads/writes the latest usage snapshot to a fixed location under the
+/// user's home directory (see `SharedStorageLocation`) so the widget
+/// extension can display it without ever making network calls or touching
+/// Keychain itself.
 public struct SharedUsageStore {
     public init() {}
 
-    private var snapshotURL: URL? {
-        AppGroupConstants.containerURL?.appendingPathComponent(AppGroupConstants.snapshotFilename)
+    private var snapshotURL: URL {
+        SharedStorageLocation.directoryURL.appendingPathComponent(SharedStorageLocation.snapshotFilename)
     }
 
-    private var errorStateURL: URL? {
-        AppGroupConstants.containerURL?.appendingPathComponent(AppGroupConstants.errorStateFilename)
+    private var errorStateURL: URL {
+        SharedStorageLocation.directoryURL.appendingPathComponent(SharedStorageLocation.errorStateFilename)
     }
 
     public func save(_ snapshot: UsageSnapshot) throws {
-        guard let url = snapshotURL else { throw SharedUsageStoreError.appGroupContainerUnavailable }
+        SharedStorageLocation.ensureDirectoryExists()
         let data = try Self.makeEncoder().encode(snapshot)
-        try data.write(to: url, options: .atomic)
+        try data.write(to: snapshotURL, options: .atomic)
     }
 
     public func loadLatest() -> UsageSnapshot? {
-        guard let url = snapshotURL, let data = try? Data(contentsOf: url) else { return nil }
+        guard let data = try? Data(contentsOf: snapshotURL) else { return nil }
         return try? Self.makeDecoder().decode(UsageSnapshot.self, from: data)
     }
 
     public func clearSnapshot() {
-        guard let url = snapshotURL else { return }
-        try? FileManager.default.removeItem(at: url)
+        try? FileManager.default.removeItem(at: snapshotURL)
     }
 
     public func saveError(_ state: FetchErrorState) {
-        guard let url = errorStateURL else { return }
+        SharedStorageLocation.ensureDirectoryExists()
         guard let data = try? JSONEncoder().encode(state) else { return }
-        try? data.write(to: url, options: .atomic)
+        try? data.write(to: errorStateURL, options: .atomic)
     }
 
     public func loadError() -> FetchErrorState {
-        guard let url = errorStateURL, let data = try? Data(contentsOf: url) else { return .none }
+        guard let data = try? Data(contentsOf: errorStateURL) else { return .none }
         return (try? JSONDecoder().decode(FetchErrorState.self, from: data)) ?? .none
     }
 
@@ -52,8 +52,4 @@ public struct SharedUsageStore {
         decoder.dateDecodingStrategy = .iso8601
         return decoder
     }
-}
-
-public enum SharedUsageStoreError: Error {
-    case appGroupContainerUnavailable
 }
