@@ -55,6 +55,7 @@ private struct LoginFlowView: View {
                 LoginWebView { sessionKey, lastActiveOrg in
                     onComplete(ClaudeSessionCredentials(sessionKey: sessionKey, organizationId: lastActiveOrg ?? ""))
                 }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
 
                 Divider()
 
