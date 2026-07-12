@@ -17,15 +17,24 @@ final class ClaudeUsageAPIClientTests: XCTestCase {
         super.tearDown()
     }
 
+    // Redacted, real response captured from GET
+    // /api/organizations/{id}/usage (a logged-in claude.ai session,
+    // Settings → Usage) — see Docs/ENDPOINT_NOTES.md. Only the fields the
+    // DTO actually declares matter for this test; the rest (limits,
+    // spend, extra_usage, etc.) are included to prove they're tolerated.
     func testFetchUsageSnapshotMapsValidResponse() async throws {
         let json = """
         {
-          "organizationName": "Acme",
-          "planName": "MAX",
-          "windows": [
-            {"kind": "five_hour", "utilization": 0.42, "resetsAt": "2026-07-08T20:00:00Z", "used": 128, "limit": 300},
-            {"kind": "seven_day", "utilization": 0.61, "resetsAt": null, "used": null, "limit": null}
-          ]
+          "five_hour": {"utilization": 40.0, "resets_at": "2026-07-12T07:00:00.069688+00:00", "limit_dollars": null, "used_dollars": null, "remaining_dollars": null},
+          "seven_day": {"utilization": 5.0, "resets_at": "2026-07-14T06:00:00.069713+00:00", "limit_dollars": null, "used_dollars": null, "remaining_dollars": null},
+          "seven_day_opus": null,
+          "seven_day_sonnet": null,
+          "extra_usage": {"is_enabled": false},
+          "limits": [
+            {"kind": "session", "group": "session", "percent": 40, "severity": "normal", "resets_at": "2026-07-12T07:00:00.069688+00:00", "scope": null, "is_active": true}
+          ],
+          "spend": {"used": {"amount_minor": 0, "currency": "USD", "exponent": 2}, "enabled": false},
+          "member_dashboard_available": false
         }
         """.data(using: .utf8)!
         StubURLProtocol.stub = .init(statusCode: 200, data: json)
@@ -35,10 +44,9 @@ final class ClaudeUsageAPIClientTests: XCTestCase {
         let snapshot = try await client.fetchUsageSnapshot(credentials: credentials, organizationId: "org-1")
 
         XCTAssertEqual(snapshot.organizationId, "org-1")
-        XCTAssertEqual(snapshot.organizationName, "Acme")
         XCTAssertEqual(snapshot.windows.count, 2)
-        XCTAssertEqual(snapshot.fiveHourWindow?.percentInt, 42)
-        XCTAssertEqual(snapshot.fiveHourWindow?.used, 128)
+        XCTAssertEqual(snapshot.fiveHourWindow?.percentInt, 40)
+        XCTAssertEqual(snapshot.sevenDayWindow?.percentInt, 5)
     }
 
     func testFetchUsageSnapshotThrowsUnauthorizedOn401() async {

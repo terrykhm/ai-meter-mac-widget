@@ -5,11 +5,11 @@ import Foundation
 /// This talks to claude.ai's undocumented internal API using the same
 /// `sessionKey` / `lastActiveOrg` cookies a browser sends after a normal
 /// login (the same technique used by several existing open-source browser
-/// extensions that already do this kind of usage tracking). The exact
-/// response shape is UNVERIFIED pending a real capture — see
-/// `Docs/ENDPOINT_NOTES.md` — so all parsing is isolated in the DTOs and
-/// `map...` function below, to keep a future schema fix contained to this
-/// one file.
+/// extensions that already do this kind of usage tracking). The response
+/// shape was confirmed from a real, logged-in session — see
+/// `Docs/ENDPOINT_NOTES.md` — parsing stays isolated in the DTOs and
+/// `map...` function below so a future schema drift fix stays contained
+/// to this one file.
 public final class ClaudeUsageAPIClient: ClaudeUsageClient {
     private let session: URLSession
     private let userAgent: String
@@ -80,51 +80,73 @@ public final class ClaudeUsageAPIClient: ClaudeUsageClient {
         }
     }
 
-    // MARK: - DTO mapping (schema unverified — see Docs/ENDPOINT_NOTES.md)
+    // MARK: - DTO mapping (schema confirmed — see Docs/ENDPOINT_NOTES.md)
 
     private static func map(_ dto: UsageResponseDTO, organizationId: String) -> UsageSnapshot {
-        let windows = dto.windows.map { window in
-            WindowUsage(
-                kind: UsageWindowKind(rawValue: window.kind),
-                utilization: window.utilization,
-                resetsAt: window.resetsAt,
-                used: window.used,
-                limit: window.limit
-            )
-        }
+        let windows: [WindowUsage] = [
+            dto.fiveHour.map { WindowUsage(kind: .fiveHour, utilization: $0.utilization / 100, resetsAt: $0.resetsAt) },
+            dto.sevenDay.map { WindowUsage(kind: .sevenDay, utilization: $0.utilization / 100, resetsAt: $0.resetsAt) }
+        ].compactMap { $0 }
         return UsageSnapshot(
             windows: windows,
             fetchedAt: Date(),
-            organizationId: organizationId,
-            organizationName: dto.organizationName,
-            planName: dto.planName
+            organizationId: organizationId
         )
     }
 
     private static func makeDecoder() -> JSONDecoder {
         let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
+        let withFractionalSeconds = ISO8601DateFormatter()
+        withFractionalSeconds.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        let withoutFractionalSeconds = ISO8601DateFormatter()
+        withoutFractionalSeconds.formatOptions = [.withInternetDateTime]
+        decoder.dateDecodingStrategy = .custom { decoder in
+            let container = try decoder.singleValueContainer()
+            let dateString = try container.decode(String.self)
+            if let date = withFractionalSeconds.date(from: dateString) {
+                return date
+            }
+            if let date = withoutFractionalSeconds.date(from: dateString) {
+                return date
+            }
+            throw DecodingError.dataCorruptedError(in: container, debugDescription: "Unrecognized date format: \(dateString)")
+        }
         return decoder
     }
 }
 
-// MARK: - DTOs (placeholder shape pending real capture, see Docs/ENDPOINT_NOTES.md)
+// MARK: - DTOs
+//
+// Only the fields this app actually uses are declared — `Decodable`
+// ignores unrecognized keys, so the many other (mostly-null, seemingly
+// codenamed) fields in the real response are simply skipped rather than
+// causing a decode failure. Confirmed shape, see Docs/ENDPOINT_NOTES.md.
 
 private struct OrganizationDTO: Decodable {
     let uuid: String
     let name: String?
 }
 
+/// `GET /api/organizations/{id}/usage`. The real response has no
+/// `windows` array, message counts, org name, or plan name — just
+/// per-window utilization percentages (0...100, not 0...1) keyed by
+/// window name at the top level.
 private struct UsageResponseDTO: Decodable {
-    let organizationName: String?
-    let planName: String?
-    let windows: [WindowDTO]
+    let fiveHour: WindowDTO?
+    let sevenDay: WindowDTO?
+
+    enum CodingKeys: String, CodingKey {
+        case fiveHour = "five_hour"
+        case sevenDay = "seven_day"
+    }
 
     struct WindowDTO: Decodable {
-        let kind: String
         let utilization: Double
         let resetsAt: Date?
-        let used: Int?
-        let limit: Int?
+
+        enum CodingKeys: String, CodingKey {
+            case utilization
+            case resetsAt = "resets_at"
+        }
     }
 }
