@@ -54,9 +54,15 @@ which requires an Admin API key from an API organization.
   needed. That's exactly why the app and widget share data through a
   plain file (`~/Library/Application Support/ClaudeUsage/`) instead of an
   App Group: Apple restricts the App Groups capability to paid accounts,
-  and this app deliberately avoids needing it. The trade-off is that
-  neither target is App-Sandboxed, which is fine for running the app
-  locally but would need revisiting before any Mac App Store submission.
+  and this app deliberately avoids needing it. The widget extension
+  target is still App-Sandboxed — macOS requires that for a WidgetKit
+  extension to register with `pluginkitd` at all (an unsandboxed widget
+  builds and embeds fine but silently never appears in the widget
+  gallery) — it just reaches the shared file via a
+  `com.apple.security.temporary-exception.files.home-relative-path.read-write`
+  entitlement instead of an App Group container. See
+  `Widget/ClaudeUsageWidgetExtension/ClaudeUsageWidgetExtension.entitlements`.
+  The main menu bar app target is not sandboxed.
 
 ### 2. Bundle identifier and Team ID
 
