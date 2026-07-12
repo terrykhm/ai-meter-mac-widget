@@ -58,33 +58,34 @@ which requires an Admin API key from an API organization.
   neither target is App-Sandboxed, which is fine for running the app
   locally but would need revisiting before any Mac App Store submission.
 
-### 2. Fill in the placeholder
+### 2. Bundle identifier and Team ID
 
-One token is used as a placeholder in `project.yml` and must be replaced
-with a real value everywhere it appears:
-
-| Placeholder | Replace with |
-|---|---|
-| `REPLACE_ME_BUNDLE_PREFIX` | Your reverse-DNS prefix, e.g. `com.yourname` |
+`project.yml`'s `bundleIdPrefix` and `PRODUCT_BUNDLE_IDENTIFIER` values
+are already set to this repo owner's real reverse-DNS prefix
+(`com.terrykhm`) — if you're building this for yourself from this repo,
+you can leave it as-is, or replace it with your own prefix if you'd
+rather use a different one:
 
 ```sh
-sed -i '' 's/REPLACE_ME_BUNDLE_PREFIX/com.yourname/g' project.yml
+sed -i '' 's/com\.terrykhm/com.yourname/g' project.yml
 ```
 
-`project.yml` also sets `DEVELOPMENT_TEAM` explicitly for both targets —
-**replace that value with your own Team ID**, not just the bundle prefix.
-This matters even though signing is otherwise on Automatic: `xcodegen
-generate` regenerates the `.xcodeproj` from this file every time, which
-silently wipes out any Team you select only in Xcode's Signing &
-Capabilities UI. Setting it here is what makes it stick.
+`project.yml` also sets `DEVELOPMENT_TEAM` explicitly for both targets
+(already filled in with this repo owner's real Team ID). If you're
+building for yourself, replace that value with your own Team ID too, not
+just the bundle prefix. This matters even though signing is otherwise on
+Automatic: `xcodegen generate` regenerates the `.xcodeproj` from this
+file every time, which silently wipes out any Team you select only in
+Xcode's Signing & Capabilities UI — setting it here is what makes it
+stick across regenerations.
 
-To find your Team ID (works for a free Personal Team too, not just paid
-memberships): first select your Personal Team once in Xcode's Signing &
-Capabilities for either target (this makes Xcode create a local signing
-certificate if you don't have one yet), then open **Keychain Access** →
-login keychain → **My Certificates** → find the certificate named
-something like "Apple Development: you@example.com" → double-click it →
-the **Organizational Unit** field is your Team ID.
+To find your own Team ID (works for a free Personal Team too, not just
+paid memberships): first select your Personal Team once in Xcode's
+Signing & Capabilities for either target (this makes Xcode create a
+local signing certificate if you don't have one yet), then open
+**Keychain Access** → login keychain → **My Certificates** → find the
+certificate named something like "Apple Development: you@example.com" →
+double-click it → the **Organizational Unit** field is your Team ID.
 
 ### 3. Generate and open the Xcode project
 

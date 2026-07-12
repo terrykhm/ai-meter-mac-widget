@@ -1,10 +1,9 @@
 name: ClaudeUsage
 
 # --------------------------------------------------------------------------
-# Before running `xcodegen generate`, replace this placeholder token
-# EVERYWHERE it appears in this repo (search-and-replace, case-sensitive):
-#
-#   com.terrykhm  -> your reverse-DNS prefix, e.g. com.yourname
+# bundleIdPrefix and PRODUCT_BUNDLE_IDENTIFIER below are already set to
+# this repo owner's real reverse-DNS prefix (com.terrykhm) and Team ID —
+# if you fork this for your own use, replace both with your own values.
 #
 # DEVELOPMENT_TEAM is set explicitly below (not left to Xcode's UI) —
 # `xcodegen generate` regenerates the .xcodeproj from this file every
