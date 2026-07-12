@@ -6,11 +6,13 @@ name: ClaudeUsage
 #
 #   com.terrykhm  -> your reverse-DNS prefix, e.g. com.yourname
 #
-# There is deliberately no DEVELOPMENT_TEAM setting below — a free
-# "Personal Team" often doesn't display a findable Team ID string in
-# Xcode's UI, so signing is left on Automatic and you just pick your Team
-# from the dropdown in Xcode's Signing & Capabilities pane after opening
-# the generated project (see README.md, Setup step 3).
+# DEVELOPMENT_TEAM is set explicitly below (not left to Xcode's UI) —
+# `xcodegen generate` regenerates the .xcodeproj from this file every
+# time, which silently wipes out any Team selected only in Xcode's
+# Signing & Capabilities UI. Find your own Team ID via Keychain Access:
+# login keychain -> My Certificates -> your "Apple Development: ..."
+# certificate -> Details -> Organizational Unit. Works for a free
+# Personal Team too, not just paid memberships.
 #
 # Neither target declares an App Sandbox entitlement or an App Group —
 # that's intentional, so this builds and runs on a free Apple ID/Personal
@@ -54,6 +56,7 @@ targets:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.terrykhm.claudeusage
         CODE_SIGN_STYLE: Automatic
+        DEVELOPMENT_TEAM: 5DQVAL7YAZ
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         MARKETING_VERSION: "1.0"
         SWIFT_VERSION: "5.0"
@@ -85,6 +88,7 @@ targets:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.terrykhm.claudeusage.widget
         CODE_SIGN_STYLE: Automatic
+        DEVELOPMENT_TEAM: 5DQVAL7YAZ
         MARKETING_VERSION: "1.0"
         CURRENT_PROJECT_VERSION: "1"
         SWIFT_VERSION: "5.0"

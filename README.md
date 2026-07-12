@@ -71,11 +71,20 @@ with a real value everywhere it appears:
 sed -i '' 's/REPLACE_ME_BUNDLE_PREFIX/com.yourname/g' project.yml
 ```
 
-There's no Team ID placeholder to fill in — `project.yml` intentionally
-leaves signing on Automatic with no `DEVELOPMENT_TEAM` set, because a free
-Personal Team often doesn't show a findable Team ID string anywhere in
-Xcode's Accounts pane (just your email). You pick the team visually
-instead, in step 3.
+`project.yml` also sets `DEVELOPMENT_TEAM` explicitly for both targets —
+**replace that value with your own Team ID**, not just the bundle prefix.
+This matters even though signing is otherwise on Automatic: `xcodegen
+generate` regenerates the `.xcodeproj` from this file every time, which
+silently wipes out any Team you select only in Xcode's Signing &
+Capabilities UI. Setting it here is what makes it stick.
+
+To find your Team ID (works for a free Personal Team too, not just paid
+memberships): first select your Personal Team once in Xcode's Signing &
+Capabilities for either target (this makes Xcode create a local signing
+certificate if you don't have one yet), then open **Keychain Access** →
+login keychain → **My Certificates** → find the certificate named
+something like "Apple Development: you@example.com" → double-click it →
+the **Organizational Unit** field is your Team ID.
 
 ### 3. Generate and open the Xcode project
 
@@ -85,19 +94,24 @@ open ClaudeUsage.xcodeproj
 ```
 
 In Xcode, for **both** targets (`ClaudeUsageMenuBar` and
-`ClaudeUsageWidgetExtension`): Signing & Capabilities → "Team" dropdown →
-select your name/email (shown as "*Your Name* (Personal Team)"). No other
-capabilities need adding — there's no App Group or Keychain Sharing group
-to configure. The first time you do this, Xcode silently creates a local
-signing certificate for you if you don't already have one.
+`ClaudeUsageWidgetExtension`), confirm Signing & Capabilities shows your
+Team selected (it should already be filled in from `DEVELOPMENT_TEAM` in
+`project.yml`) with no red errors. No other capabilities need adding —
+there's no App Group or Keychain Sharing group to configure.
 
-If you ever do need the raw Team ID string (e.g. for CI, or filling in
-`DEVELOPMENT_TEAM` by hand): open Keychain Access → login keychain → "My
-Certificates" → find the certificate Xcode created (something like "Apple
-Development: you@example.com") → double-click it → the "Organizational
-Unit" field is your Team ID.
+Build and run (`ClaudeUsageMenuBar` scheme). To confirm signing actually
+took (not just that Xcode shows no error), you can check from Terminal
+after building:
 
-Build and run (`ClaudeUsageMenuBar` scheme).
+```sh
+codesign -dvv /path/to/ClaudeUsageMenuBar.app 2>&1 | grep TeamIdentifier
+codesign -dvv /path/to/ClaudeUsageMenuBar.app/Contents/PlugIns/ClaudeUsageWidgetExtension.appex 2>&1 | grep TeamIdentifier
+```
+
+Both should print your real Team ID (not "not set") — if either shows
+"not set", the app/extension is only ad-hoc signed and the widget will
+never register with the system (`pluginkit -m -v -p
+com.apple.widgetkit-extension` will print nothing for it).
 
 ### 4. One-time: capture the real usage endpoint
 
