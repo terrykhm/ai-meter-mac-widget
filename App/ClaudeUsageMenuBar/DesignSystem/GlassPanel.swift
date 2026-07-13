@@ -73,7 +73,7 @@ struct PlanBadge: View {
 struct UsageProgressBar: View {
     var fraction: Double
     var tint: Color = UsageColors.accent
-    var height: CGFloat = 7
+    var height: CGFloat = 8
 
     var body: some View {
         GeometryReader { geometry in
@@ -95,15 +95,16 @@ struct UsageProgressRow: View {
     var tint: Color = UsageColors.accent
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
+        VStack(alignment: .leading, spacing: 5) {
             HStack {
                 Text(label)
+                    .foregroundStyle(UsageColors.textSecondary())
                 Spacer()
                 Text(UsageFormatting.percentString(usage))
                     .fontWeight(.semibold)
+                    .foregroundStyle(UsageColors.textPrimary)
             }
-            .font(.system(size: 11))
-            .foregroundStyle(UsageColors.textSecondary())
+            .font(.system(size: 12))
             UsageProgressBar(fraction: usage.utilization, tint: tint)
         }
     }
