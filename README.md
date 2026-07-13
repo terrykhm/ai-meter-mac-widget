@@ -158,11 +158,17 @@ distribution flow:
   it. The widget should still self-register with `pluginkitd` normally
   on a properly signed copy; if it doesn't show up in the widget gallery,
   re-run the `pluginkit -a` step from Troubleshooting below.
-  [`dist/ClaudeUsageMenuBar.app`](dist/ClaudeUsageMenuBar.app) is a
-  pre-built Release (universal arm64/x86_64) checked in for exactly this
-  — grab it directly rather than building one yourself, but note it's a
-  point-in-time snapshot, not something CI keeps in sync with source, so
-  it can drift stale if you don't refresh it after future changes.
+
+  A pre-built Release (universal arm64/x86_64) is available two ways:
+  - **[GitHub Releases](https://github.com/terrykhm/claude-token-usage-mac-widget/releases/latest)**
+    — a single zipped `.app`, easiest to download on another Mac.
+  - [`dist/ClaudeUsageMenuBar.app`](dist/ClaudeUsageMenuBar.app) — the
+    same build, checked directly into the repo (so a plain `git clone`
+    gets you a working copy without needing Xcode at all).
+
+  Both are point-in-time snapshots, not something CI keeps in sync with
+  source — they'll drift stale after future source changes until
+  manually rebuilt and re-uploaded/recommitted.
 
 Either way, sign-in and the shared usage snapshot are per-machine — the
 Keychain-stored session and the file under `~/Library/Application
