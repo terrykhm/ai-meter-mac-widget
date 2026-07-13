@@ -13,6 +13,8 @@ struct SettingsView: View {
 
     var body: some View {
         Form {
+            statusSection
+
             Picker("Refresh every", selection: $appState.pollInterval) {
                 ForEach(Self.pollIntervalOptions, id: \.seconds) { option in
                     Text(option.label).tag(option.seconds)
@@ -24,17 +26,42 @@ struct SettingsView: View {
                     LaunchAtLoginManager.setEnabled(newValue)
                 }
 
-            if appState.authStatus == .signedIn {
-                Button("Sign out") {
-                    appState.signOut()
-                }
-            }
-
-            Text("This app reads your claude.ai usage using an unofficial, undocumented endpoint. See the README for details.")
+            Text("This app reads your claude.ai usage using an unofficial, undocumented endpoint. See the README for details. It has no menu bar icon or Dock icon — reopen it (double-click in Finder or Spotlight) any time to get back to this window.")
                 .font(.caption)
                 .foregroundStyle(.secondary)
         }
         .padding(20)
         .frame(width: 340)
+    }
+
+    @ViewBuilder
+    private var statusSection: some View {
+        switch appState.authStatus {
+        case .signedOut:
+            HStack {
+                Text("Not signed in")
+                    .foregroundStyle(.secondary)
+                Spacer()
+                Button("Sign in") {
+                    appState.beginSignIn()
+                }
+            }
+        case .signingIn:
+            HStack(spacing: 8) {
+                ProgressView()
+                    .controlSize(.small)
+                Text("Waiting for sign-in…")
+                    .foregroundStyle(.secondary)
+            }
+        case .signedIn:
+            HStack {
+                Label("Signed in", systemImage: "checkmark.circle.fill")
+                    .foregroundStyle(.green)
+                Spacer()
+                Button("Sign out") {
+                    appState.signOut()
+                }
+            }
+        }
     }
 }
