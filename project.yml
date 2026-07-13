@@ -84,7 +84,7 @@ targets:
     info:
       path: Widget/ClaudeUsageWidgetExtension/Info.plist
       properties:
-        CFBundleDisplayName: Claude Usage Widget
+        CFBundleDisplayName: Claude
         CFBundleShortVersionString: "1.0"
         CFBundleVersion: "1"
         NSExtension:

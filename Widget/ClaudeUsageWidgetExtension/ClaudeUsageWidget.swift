@@ -8,7 +8,7 @@ struct ClaudeUsageWidget: Widget {
         StaticConfiguration(kind: kind, provider: ClaudeUsageTimelineProvider()) { entry in
             ClaudeUsageWidgetEntryView(entry: entry)
         }
-        .configurationDisplayName("Claude Usage")
+        .configurationDisplayName("Claude")
         .description("See your Claude session usage and time until reset.")
         .supportedFamilies([.systemSmall, .systemMedium, .systemLarge])
     }

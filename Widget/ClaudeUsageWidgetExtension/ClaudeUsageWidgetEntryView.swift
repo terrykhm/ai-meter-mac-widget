@@ -35,14 +35,7 @@ struct ClaudeUsageWidgetEntryView: View {
 private struct SignedOutView: View {
     var body: some View {
         VStack(spacing: 10) {
-            Circle()
-                .fill(UsageColors.accentGradient)
-                .frame(width: 40, height: 40)
-                .overlay(
-                    Text("C")
-                        .font(.system(size: 16, weight: .bold))
-                        .foregroundStyle(.white)
-                )
+            ClaudeLogoMark(size: 40)
             Text("Sign in to see\nyour usage")
                 .font(.system(size: 11.5))
                 .foregroundStyle(UsageColors.textSecondary())
@@ -60,14 +53,7 @@ private struct BrandRow: View {
 
     var body: some View {
         HStack(spacing: 8) {
-            Circle()
-                .fill(UsageColors.accentGradient)
-                .frame(width: dotSize, height: dotSize)
-                .overlay(
-                    Text("C")
-                        .font(.system(size: dotSize * 0.45, weight: .bold))
-                        .foregroundStyle(.white)
-                )
+            ClaudeLogoMark(size: dotSize)
             if showTitle {
                 Text("Claude")
                     .font(.system(size: titleSize, weight: .semibold))
@@ -89,9 +75,7 @@ private struct SmallSignedInView: View {
     var body: some View {
         VStack(spacing: 10) {
             HStack {
-                Circle()
-                    .fill(UsageColors.accentGradient)
-                    .frame(width: 20, height: 20)
+                ClaudeLogoMark(size: 20)
                 Spacer()
                 if let plan = snapshot.planName {
                     PlanBadge(text: plan)
@@ -111,6 +95,18 @@ private struct SmallSignedInView: View {
                     .foregroundStyle(UsageColors.textSecondary())
             }
         }
+    }
+}
+
+private struct ClaudeLogoMark: View {
+    var size: CGFloat
+
+    var body: some View {
+        Image("ClaudeLogo")
+            .resizable()
+            .scaledToFit()
+            .frame(width: size, height: size)
+            .accessibilityHidden(true)
     }
 }
 
