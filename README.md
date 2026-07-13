@@ -1,8 +1,11 @@
-# Claude Usage
+# AI Meter
 
-A native macOS menu bar app + desktop widget that signs into your personal
-Claude.ai account and shows your usage/limit status (session % used,
-messages used, time until reset).
+A native macOS background app + desktop widget for tracking AI usage.
+Currently supports Claude.ai only: it signs into your personal account and
+shows your usage/limit status (session % used, time until reset) via its
+desktop widget. Built to grow into other providers (Gemini, ChatGPT, ...)
+over time — the widget's "AI Meter" header sits above the current
+Claude-specific content for that reason.
 
 > Status: source is fully scaffolded; a few Mac-only setup steps are still
 > required before it builds and runs. See "Setup" below.
@@ -128,14 +131,43 @@ captured from a live, logged-in browser session — see
 `ClaudeUsageEndpoints.swift` / `ClaudeUsageAPIClient.swift` to match once you
 have it.
 
-Note: `Assets.xcassets` ships with empty `AppIcon`/`MenuBarGlyph` slots
-(just the `Contents.json` catalog entries) — drop your own images in when
-you're ready; the app builds and runs fine without them in the meantime.
-
 ### 5. Add the widget
 
 Open Notification Center (or your desktop) → "Edit Widgets" → search
-"Claude Usage" → add the Small or Medium size.
+"AI Meter" → add the Small, Medium, or Large size.
+
+## Installing on another Mac
+
+This project only ever uses a free "Personal Team" Apple ID (see
+"Prerequisites" above) — there's no paid Apple Developer Program
+membership, so builds are signed with a local "Apple Development"
+certificate, not a "Developer ID Application" certificate, and are never
+notarized. That rules out the usual "build once, copy the .app anywhere"
+distribution flow:
+
+- **Recommended: clone and build on each Mac.** Repeat Setup steps 1–3 on
+  the other laptop (same Apple ID signed into Xcode). A locally
+  Xcode-built app is automatically trusted by Gatekeeper on the machine
+  that built it, so this avoids any signing/notarization issues entirely
+  — it's also exactly the flow this whole repo is already set up for.
+- **Copying the built `.app` instead** (AirDrop, USB drive, etc.) mostly
+  works, but expect friction: Gatekeeper will likely block the first
+  launch on the new Mac ("cannot be opened because Apple cannot check it
+  for malicious software") since it wasn't built there — right-click →
+  Open, or System Settings → Privacy & Security → "Open Anyway" clears
+  it. The widget should still self-register with `pluginkitd` normally
+  on a properly signed copy; if it doesn't show up in the widget gallery,
+  re-run the `pluginkit -a` step from Troubleshooting below.
+  [`dist/ClaudeUsageMenuBar.app`](dist/ClaudeUsageMenuBar.app) is a
+  pre-built Release (universal arm64/x86_64) checked in for exactly this
+  — grab it directly rather than building one yourself, but note it's a
+  point-in-time snapshot, not something CI keeps in sync with source, so
+  it can drift stale if you don't refresh it after future changes.
+
+Either way, sign-in and the shared usage snapshot are per-machine — the
+Keychain-stored session and the file under `~/Library/Application
+Support/ClaudeUsage/` don't sync between Macs, so you'll sign in
+separately on each one.
 
 ## Troubleshooting
 
@@ -146,11 +178,32 @@ into claude.ai in your normal browser, open Web Inspector → Application →
 Cookies → `https://claude.ai`, copy the `sessionKey` value, and paste it in.
 
 **Widget shows stale data.** The widget only reads what the app last wrote;
-it never fetches on its own. Open the app to trigger a refresh.
+it never fetches on its own. The app has no menu bar icon — reopen it
+(double-click `AI Meter.app`/`ClaudeUsageMenuBar.app` again in Finder or
+Spotlight while it's already running) to bring up Settings and trigger a
+refresh.
 
 **"Sign in again" appears out of nowhere.** Your claude.ai session expired
-or was invalidated (e.g. you signed out elsewhere). Sign in again from the
-popover.
+or was invalidated (e.g. you signed out elsewhere). Reopen the app and sign
+in again from Settings.
+
+**Widget doesn't show up in "Edit Widgets" at all.** macOS silently
+refuses to register an unsandboxed WidgetKit extension with `pluginkitd` —
+no error anywhere, it just never appears. If you've confirmed both targets
+are actually signed with your real Team ID (step 3 above) and it's still
+missing, force a re-scan:
+
+```sh
+pluginkit -a /path/to/ClaudeUsageMenuBar.app/Contents/PlugIns/ClaudeUsageWidgetExtension.appex
+pluginkit -m -v -p com.apple.widgetkit-extension | grep -i claude
+```
+
+The second command should print a line for `com.terrykhm.claudeusage.widget`
+(or your own bundle prefix). If it still prints nothing, check
+`Widget/ClaudeUsageWidgetExtension/ClaudeUsageWidgetExtension.entitlements`
+exists and is wired up via `CODE_SIGN_ENTITLEMENTS` in `project.yml` — the
+widget target must have App Sandbox enabled for registration to work at
+all, even though the main app deliberately isn't sandboxed.
 
 ## License
 
