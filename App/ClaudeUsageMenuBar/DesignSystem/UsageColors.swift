@@ -25,6 +25,12 @@ enum UsageColors {
         endPoint: .bottomTrailing
     )
 
+    /// Lighter accent shade for a second/secondary progress bar sitting
+    /// next to the primary `accent`-colored one (e.g. weekly vs. session).
+    static let accentSecondary = Color(red: 0xE0 / 255, green: 0x8B / 255, blue: 0x68 / 255)
+
+    static let progressTrack = textPrimary.opacity(0.08)
+
     static let planBadgeText = Color(red: 0xBD / 255, green: 0x5A / 255, blue: 0x3A / 255)
     static let planBadgeBackground = Color(red: 0xC2 / 255, green: 0x68 / 255, blue: 0x3D / 255).opacity(0.15)
 

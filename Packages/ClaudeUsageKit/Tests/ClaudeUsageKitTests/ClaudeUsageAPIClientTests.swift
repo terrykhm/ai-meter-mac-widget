@@ -13,6 +13,7 @@ final class ClaudeUsageAPIClientTests: XCTestCase {
 
     override func tearDown() {
         StubURLProtocol.stub = nil
+        StubURLProtocol.organizationsStub = nil
         session = nil
         super.tearDown()
     }
@@ -47,6 +48,37 @@ final class ClaudeUsageAPIClientTests: XCTestCase {
         XCTAssertEqual(snapshot.windows.count, 2)
         XCTAssertEqual(snapshot.fiveHourWindow?.percentInt, 40)
         XCTAssertEqual(snapshot.sevenDayWindow?.percentInt, 5)
+    }
+
+    // Redacted, real response captured from GET /api/organizations —
+    // `capabilities` is what the plan badge is derived from.
+    func testFetchUsageSnapshotDerivesPlanBadgeFromOrganizationCapabilities() async throws {
+        StubURLProtocol.stub = .init(statusCode: 200, data: """
+        {"five_hour": {"utilization": 40.0, "resets_at": null}, "seven_day": {"utilization": 5.0, "resets_at": null}}
+        """.data(using: .utf8)!)
+        StubURLProtocol.organizationsStub = .init(statusCode: 200, data: """
+        [{"uuid": "org-1", "name": "test@example.com's Organization", "capabilities": ["chat", "claude_pro"]}]
+        """.data(using: .utf8)!)
+
+        let client = ClaudeUsageAPIClient(session: session)
+        let credentials = ClaudeSessionCredentials(sessionKey: "abc", organizationId: "org-1")
+        let snapshot = try await client.fetchUsageSnapshot(credentials: credentials, organizationId: "org-1")
+
+        XCTAssertEqual(snapshot.planName, "PRO")
+    }
+
+    func testFetchUsageSnapshotLeavesPlanBadgeNilWhenOrganizationsFetchFails() async throws {
+        StubURLProtocol.stub = .init(statusCode: 200, data: """
+        {"five_hour": {"utilization": 40.0, "resets_at": null}, "seven_day": {"utilization": 5.0, "resets_at": null}}
+        """.data(using: .utf8)!)
+        StubURLProtocol.organizationsStub = .init(statusCode: 401, data: Data())
+
+        let client = ClaudeUsageAPIClient(session: session)
+        let credentials = ClaudeSessionCredentials(sessionKey: "abc", organizationId: "org-1")
+        let snapshot = try await client.fetchUsageSnapshot(credentials: credentials, organizationId: "org-1")
+
+        XCTAssertNil(snapshot.planName)
+        XCTAssertEqual(snapshot.windows.count, 2, "a failed plan-badge lookup must not fail the primary usage fetch")
     }
 
     func testFetchUsageSnapshotThrowsUnauthorizedOn401() async {
@@ -88,13 +120,23 @@ private final class StubURLProtocol: URLProtocol {
         let data: Data
     }
 
+    /// Response for `/usage` requests.
     static var stub: Stub?
+    /// Response for `/organizations` requests. Falls back to `stub` when
+    /// unset, so existing single-stub tests (which never hit this path
+    /// far enough to matter) keep working unchanged.
+    static var organizationsStub: Stub?
 
     override class func canInit(with request: URLRequest) -> Bool { true }
     override class func canonicalRequest(for request: URLRequest) -> URLRequest { request }
 
     override func startLoading() {
-        guard let stub = StubURLProtocol.stub, let url = request.url else {
+        guard let url = request.url else {
+            client?.urlProtocol(self, didFailWithError: URLError(.badURL))
+            return
+        }
+        let isOrganizations = url.path.hasSuffix("/organizations")
+        guard let stub = (isOrganizations ? StubURLProtocol.organizationsStub ?? StubURLProtocol.stub : StubURLProtocol.stub) else {
             client?.urlProtocol(self, didFailWithError: URLError(.badURL))
             return
         }

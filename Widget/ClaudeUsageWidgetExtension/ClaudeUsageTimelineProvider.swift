@@ -22,9 +22,12 @@ struct ClaudeUsageTimelineProvider: TimelineProvider {
                     WindowUsage(
                         kind: .fiveHour,
                         utilization: 0.42,
-                        resetsAt: Date().addingTimeInterval(6 * 3600 + 12 * 60),
-                        used: 128,
-                        limit: 300
+                        resetsAt: Date().addingTimeInterval(6 * 3600 + 12 * 60)
+                    ),
+                    WindowUsage(
+                        kind: .sevenDay,
+                        utilization: 0.28,
+                        resetsAt: Date().addingTimeInterval(3 * 86400)
                     )
                 ],
                 fetchedAt: Date(),

@@ -1,4 +1,5 @@
 import SwiftUI
+import ClaudeUsageKit
 
 /// The frosted-glass card background used throughout the "Warm Frosted"
 /// design: a translucent white fill over `.regularMaterial`, a subtle
@@ -62,5 +63,53 @@ struct PlanBadge: View {
             .padding(.horizontal, 8)
             .padding(.vertical, 3)
             .background(Capsule().fill(UsageColors.planBadgeBackground))
+    }
+}
+
+/// A horizontal fill bar for a single window's utilization, used where the
+/// mockup shows a message-count progress bar — real usage data only gives
+/// a percentage, so this fills directly from `WindowUsage.utilization`
+/// rather than a used/limit ratio.
+struct UsageProgressBar: View {
+    var fraction: Double
+    var tint: Color = UsageColors.accent
+    var height: CGFloat = 7
+
+    var body: some View {
+        GeometryReader { geometry in
+            ZStack(alignment: .leading) {
+                Capsule().fill(UsageColors.progressTrack)
+                Capsule()
+                    .fill(tint)
+                    .frame(width: geometry.size.width * max(0, min(1, fraction)))
+            }
+        }
+        .frame(height: height)
+    }
+}
+
+/// A labeled progress row for one usage window: "<kind> · resets in
+/// <time>" on the left, the percentage on the right, a fill bar below.
+struct UsageProgressRow: View {
+    var usage: WindowUsage
+    var tint: Color = UsageColors.accent
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            HStack {
+                Text(label)
+                Spacer()
+                Text(UsageFormatting.percentString(usage))
+                    .fontWeight(.semibold)
+            }
+            .font(.system(size: 11))
+            .foregroundStyle(UsageColors.textSecondary())
+            UsageProgressBar(fraction: usage.utilization, tint: tint)
+        }
+    }
+
+    private var label: String {
+        guard let resets = UsageFormatting.resetsInString(usage) else { return usage.kind.displayName }
+        return "\(usage.kind.displayName) · \(resets)"
     }
 }

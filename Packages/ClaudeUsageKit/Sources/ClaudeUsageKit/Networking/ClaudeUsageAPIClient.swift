@@ -38,14 +38,40 @@ public final class ClaudeUsageAPIClient: ClaudeUsageClient {
         let request = makeRequest(url: ClaudeUsageEndpoints.usage(organizationId: organizationId), credentials: credentials)
         let (data, response) = try await session.data(for: request)
         try Self.validate(response)
+        let dto: UsageResponseDTO
         do {
-            let dto = try Self.makeDecoder().decode(UsageResponseDTO.self, from: data)
-            return Self.map(dto, organizationId: organizationId)
-        } catch let error as ClaudeUsageDecodingError {
-            throw error
+            dto = try Self.makeDecoder().decode(UsageResponseDTO.self, from: data)
         } catch {
             throw ClaudeUsageDecodingError.schemaMismatch("usage: \(error)")
         }
+        // The usage endpoint itself carries no plan info; best-effort only
+        // — a failure here shouldn't fail the usage fetch, the badge just
+        // won't show for that cycle.
+        let planName = try? await fetchPlanLabel(credentials: credentials, organizationId: organizationId)
+        return Self.map(dto, organizationId: organizationId, planName: planName)
+    }
+
+    /// Re-fetches `/api/organizations` to read `capabilities` for the
+    /// active org and derive a short plan badge from it (e.g.
+    /// `"claude_pro"` -> "PRO"). The mapping below is inferred from a
+    /// single real Pro-plan capture — see Docs/ENDPOINT_NOTES.md — so it's
+    /// necessarily a guess for other tiers; unrecognized capability sets
+    /// just mean no badge rather than a wrong one.
+    private func fetchPlanLabel(credentials: ClaudeSessionCredentials, organizationId: String) async throws -> String? {
+        let request = makeRequest(url: ClaudeUsageEndpoints.organizations(), credentials: credentials)
+        let (data, response) = try await session.data(for: request)
+        try Self.validate(response)
+        let dtos = try Self.makeDecoder().decode([OrganizationDTO].self, from: data)
+        guard let match = dtos.first(where: { $0.uuid == organizationId }) else { return nil }
+        return Self.planLabel(from: match.capabilities ?? [])
+    }
+
+    private static func planLabel(from capabilities: [String]) -> String? {
+        if capabilities.contains("claude_max") { return "MAX" }
+        if capabilities.contains("claude_team") { return "TEAM" }
+        if capabilities.contains("claude_enterprise") { return "ENTERPRISE" }
+        if capabilities.contains("claude_pro") { return "PRO" }
+        return nil
     }
 
     // MARK: - Request building
@@ -82,7 +108,7 @@ public final class ClaudeUsageAPIClient: ClaudeUsageClient {
 
     // MARK: - DTO mapping (schema confirmed — see Docs/ENDPOINT_NOTES.md)
 
-    private static func map(_ dto: UsageResponseDTO, organizationId: String) -> UsageSnapshot {
+    private static func map(_ dto: UsageResponseDTO, organizationId: String, planName: String?) -> UsageSnapshot {
         let windows: [WindowUsage] = [
             dto.fiveHour.map { WindowUsage(kind: .fiveHour, utilization: $0.utilization / 100, resetsAt: $0.resetsAt) },
             dto.sevenDay.map { WindowUsage(kind: .sevenDay, utilization: $0.utilization / 100, resetsAt: $0.resetsAt) }
@@ -90,7 +116,8 @@ public final class ClaudeUsageAPIClient: ClaudeUsageClient {
         return UsageSnapshot(
             windows: windows,
             fetchedAt: Date(),
-            organizationId: organizationId
+            organizationId: organizationId,
+            planName: planName
         )
     }
 
@@ -125,6 +152,7 @@ public final class ClaudeUsageAPIClient: ClaudeUsageClient {
 private struct OrganizationDTO: Decodable {
     let uuid: String
     let name: String?
+    let capabilities: [String]?
 }
 
 /// `GET /api/organizations/{id}/usage`. The real response has no
