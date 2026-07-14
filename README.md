@@ -153,30 +153,34 @@ distribution flow:
 - **Copying the built `.app` instead** (AirDrop, USB drive, etc.) mostly
   works, but expect friction: Gatekeeper will likely block the first
   launch on the new Mac ("Apple could not verify ... is free of malware")
-  since it wasn't built there. Clear it one of these ways:
-  - **Terminal (most reliable, works regardless of macOS version):**
+  since it wasn't built there. This is a free "Personal Team" signed
+  build, not notarized — no client-side trick eliminates this warning
+  entirely (only a paid Apple Developer Program membership + notarization
+  does), but it only takes one bypass:
+
+  - **Easiest: [GitHub Releases](https://github.com/terrykhm/claude-token-usage-mac-widget/releases/latest)**
+    — download the zip, unzip it, double-click **`Install.command`**. It
+    moves the app to /Applications, clears the quarantine flag, and
+    launches it for you. `Install.command` itself will still trigger one
+    "unidentified developer" warning the first time (right-click → Open
+    to clear it) since it's also a file downloaded from the internet —
+    that one click is as far as this can be automated without paid
+    notarization.
+  - **Manual:** grab just the app —
+    [`dist/ClaudeUsageMenuBar.app`](dist/ClaudeUsageMenuBar.app) is the
+    same build checked directly into the repo (a plain `git clone` gets
+    you a working copy without needing Xcode at all) — then clear
+    Gatekeeper yourself:
     ```sh
     xattr -cr /Applications/ClaudeUsageMenuBar.app
     ```
-    strips the quarantine flag the download added; then open normally.
-  - **Finder:** right-click (not double-click) the app → **Open** — this
-    shows a different dialog than double-click, with an actual **Open**
-    button to bypass the check.
-  - Or **System Settings → Privacy & Security**, scroll down to the
-    blocked-app message → **Open Anyway**, then confirm once more when
-    reopening the app.
+    or right-click the app → **Open**, or **System Settings → Privacy &
+    Security** → **Open Anyway**.
 
-  This is a one-time step per Mac. The widget should still self-register
-  with `pluginkitd` normally on a properly signed copy; if it doesn't
-  show up in the widget gallery, re-run the `pluginkit -a` step from
-  Troubleshooting below.
-
-  A pre-built Release (universal arm64/x86_64) is available two ways:
-  - **[GitHub Releases](https://github.com/terrykhm/claude-token-usage-mac-widget/releases/latest)**
-    — a single zipped `.app`, easiest to download on another Mac.
-  - [`dist/ClaudeUsageMenuBar.app`](dist/ClaudeUsageMenuBar.app) — the
-    same build, checked directly into the repo (so a plain `git clone`
-    gets you a working copy without needing Xcode at all).
+  Either path is a one-time step per Mac. The widget should still
+  self-register with `pluginkitd` normally on a properly signed copy; if
+  it doesn't show up in the widget gallery, re-run the `pluginkit -a`
+  step from Troubleshooting below.
 
   Both are point-in-time snapshots, not something CI keeps in sync with
   source — they'll drift stale after future source changes until
