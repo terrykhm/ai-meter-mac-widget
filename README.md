@@ -160,12 +160,13 @@ distribution flow:
 
   - **Easiest: [GitHub Releases](https://github.com/terrykhm/claude-token-usage-mac-widget/releases/latest)**
     — download the zip, unzip it, double-click **"AI Meter
-    Installer.command"**. It moves the app to /Applications, clears the
-    quarantine flag, and launches it for you. The installer script
-    itself will still trigger one "unidentified developer" warning the
-    first time (right-click → Open to clear it) since it's also a file
-    downloaded from the internet — that one click is as far as this can
-    be automated without paid notarization.
+    Installer.app"** (a small native app, not a Terminal script — it has
+    its own proper icon). It moves `ClaudeUsageMenuBar.app` to
+    /Applications, clears its quarantine flag, and launches it. The
+    installer app itself will still trigger one "unidentified developer"
+    warning the first time (right-click → Open to clear it) since it's
+    also a file downloaded from the internet — that one click is as far
+    as this can be automated without paid notarization.
   - **Manual:** grab just the app —
     [`dist/ClaudeUsageMenuBar.app`](dist/ClaudeUsageMenuBar.app) is the
     same build checked directly into the repo (a plain `git clone` gets
