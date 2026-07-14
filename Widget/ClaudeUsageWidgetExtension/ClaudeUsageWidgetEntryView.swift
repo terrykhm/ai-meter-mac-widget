@@ -85,17 +85,25 @@ private struct AppLogoMark: View {
     }
 }
 
+/// Widgets can't host the real sign-in flow (it's a full `WKWebView`
+/// login window, only the app can show that) — tapping this opens the
+/// app instead, via a custom URL scheme `AppDelegate` handles the same
+/// way it handles being reopened: bring Settings to the front, where the
+/// actual "Sign in" button lives.
 private struct SignedOutView: View {
     var body: some View {
-        VStack(spacing: 10) {
-            ClaudeLogoMark(size: 40)
-            Text("Sign in to see\nyour usage")
-                .font(.system(size: 11.5))
-                .foregroundStyle(UsageColors.textSecondary())
-                .multilineTextAlignment(.center)
-                .lineSpacing(1)
+        Link(destination: URL(string: "aimeter://open")!) {
+            VStack(spacing: 10) {
+                ClaudeLogoMark(size: 40)
+                Text("Sign in to see\nyour usage")
+                    .font(.system(size: 11.5))
+                    .foregroundStyle(UsageColors.textSecondary())
+                    .multilineTextAlignment(.center)
+                    .lineSpacing(1)
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .buttonStyle(.plain)
     }
 }
 

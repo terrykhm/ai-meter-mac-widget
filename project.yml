@@ -57,6 +57,13 @@ targets:
         CFBundleShortVersionString: "1.0"
         CFBundleVersion: "1"
         NSHumanReadableCopyright: ""
+        # aimeter:// — lets the widget's signed-out state open the app
+        # (it can't host the real WKWebView sign-in flow itself). See
+        # AppDelegate.application(_:open:).
+        CFBundleURLTypes:
+          - CFBundleURLName: com.terrykhm.claudeusage
+            CFBundleURLSchemes:
+              - aimeter
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.terrykhm.claudeusage

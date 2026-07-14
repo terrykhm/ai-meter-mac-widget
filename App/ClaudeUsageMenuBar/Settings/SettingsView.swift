@@ -12,23 +12,32 @@ struct SettingsView: View {
     ]
 
     var body: some View {
-        Form {
-            statusSection
+        // The trailing help text lives outside the Form, as plain
+        // caption text below it rather than a 4th form row — this turned
+        // out not to matter for the crash this window used to hit (see
+        // SettingsWindowController; the actual cause was how the window
+        // itself was being sized), but it's a fine layout on its own
+        // merits and it's what's proven working, so it stayed.
+        VStack(alignment: .leading, spacing: 12) {
+            Form {
+                statusSection
 
-            Picker("Refresh every", selection: $appState.pollInterval) {
-                ForEach(Self.pollIntervalOptions, id: \.seconds) { option in
-                    Text(option.label).tag(option.seconds)
+                Picker("Refresh every", selection: $appState.pollInterval) {
+                    ForEach(Self.pollIntervalOptions, id: \.seconds) { option in
+                        Text(option.label).tag(option.seconds)
+                    }
                 }
+
+                Toggle("Launch at login", isOn: $launchAtLogin)
+                    .onChange(of: launchAtLogin) { _, newValue in
+                        LaunchAtLoginManager.setEnabled(newValue)
+                    }
             }
-
-            Toggle("Launch at login", isOn: $launchAtLogin)
-                .onChange(of: launchAtLogin) { _, newValue in
-                    LaunchAtLoginManager.setEnabled(newValue)
-                }
 
             Text("This app reads your claude.ai usage using an unofficial, undocumented endpoint. See the README for details. It has no menu bar icon or Dock icon — reopen it (double-click in Finder or Spotlight) any time to get back to this window.")
                 .font(.caption)
                 .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
         }
         .padding(20)
         .frame(width: 340)
