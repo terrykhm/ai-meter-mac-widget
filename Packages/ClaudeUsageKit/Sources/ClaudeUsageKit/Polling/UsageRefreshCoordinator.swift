@@ -37,9 +37,16 @@ public final class UsageRefreshCoordinator {
         self.lastError = store.loadError()
     }
 
+    /// True if the last fetch attempt (success or failure) was too recent
+    /// to allow another one yet.
+    private var isRateLimited: Bool {
+        guard let lastAttemptDate else { return false }
+        return Date().timeIntervalSince(lastAttemptDate) < minimumRefreshInterval
+    }
+
     @discardableResult
     public func refresh(credentials: ClaudeSessionCredentials) async -> FetchErrorState {
-        if let lastAttemptDate, Date().timeIntervalSince(lastAttemptDate) < minimumRefreshInterval {
+        if isRateLimited {
             return lastError
         }
         lastAttemptDate = Date()
@@ -69,19 +76,29 @@ public final class UsageRefreshCoordinator {
 
         widgetRefreshObserverToken = WidgetRefreshRequestObserver.observe { [weak self] in
             Task { @MainActor in
-                guard let self, let credentials = self.credentialsProvider?() else { return }
-                await self.refresh(credentials: credentials)
+                await self?.refreshIfDue()
             }
         }
 
         pollTask = Task { [weak self] in
             while !Task.isCancelled {
-                if let credentials = credentialsProvider() {
-                    await self?.refresh(credentials: credentials)
-                }
+                await self?.refreshIfDue()
                 try? await Task.sleep(nanoseconds: UInt64(max(interval, 30)) * 1_000_000_000)
             }
         }
+    }
+
+    /// Entry point for triggers that don't already have credentials in
+    /// hand (the poll loop, the widget-visibility signal). Checks the
+    /// rate limit *before* calling `credentialsProvider` — WidgetKit can
+    /// call the widget's `getTimeline` several times in a quick burst
+    /// (observed during development), and each one posts a refresh
+    /// signal. Without this gate, a burst of signals meant a burst of
+    /// Keychain reads too, not just fetch attempts — each of which could
+    /// surface as its own macOS authorization prompt.
+    private func refreshIfDue() async {
+        guard !isRateLimited, let credentials = credentialsProvider?() else { return }
+        await refresh(credentials: credentials)
     }
 
     public func stopPolling() {

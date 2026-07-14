@@ -64,6 +64,37 @@ final class UsageRefreshCoordinatorTests: XCTestCase {
         XCTAssertEqual(client.fetchCount, 2, "the widget's Darwin notification should have triggered a second fetch")
     }
 
+    func testBurstOfWidgetRefreshRequestsOnlyResolvesCredentialsOnce() async throws {
+        let client = CountingFakeClient()
+        let coordinator = UsageRefreshCoordinator(client: client, store: makeStore(), minimumRefreshInterval: 30)
+        var credentialsLookupCount = 0
+        let credentials = ClaudeSessionCredentials(sessionKey: "abc", organizationId: "org-1")
+
+        coordinator.startPolling(interval: 3600, credentialsProvider: {
+            credentialsLookupCount += 1
+            return credentials
+        })
+        defer { coordinator.stopPolling() }
+
+        // The poll loop resolves credentials once immediately on start.
+        try await Task.sleep(nanoseconds: 100_000_000)
+        XCTAssertEqual(credentialsLookupCount, 1)
+
+        // WidgetKit can call getTimeline several times in a quick burst;
+        // each one posts a refresh signal. None of those extra signals
+        // should touch credentialsProvider (i.e. Keychain) again while
+        // still inside the 30s rate-limit window — that was the bug: the
+        // Keychain read used to happen before the rate-limit check, so a
+        // burst of widget signals meant a burst of Keychain reads too.
+        for _ in 0..<5 {
+            WidgetRefreshRequestObserver.postRefreshRequest()
+        }
+        try await Task.sleep(nanoseconds: 300_000_000)
+
+        XCTAssertEqual(credentialsLookupCount, 1, "a burst of widget signals within the rate-limit window should not repeatedly touch Keychain")
+        XCTAssertEqual(client.fetchCount, 1)
+    }
+
     private func makeStore() -> SharedUsageStore {
         SharedUsageStore(directoryURL: tempDirectory)
     }
