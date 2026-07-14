@@ -5,18 +5,28 @@ import Foundation
 /// extension can display it without ever making network calls or touching
 /// Keychain itself.
 public struct SharedUsageStore {
-    public init() {}
+    /// Defaults to the real shared location; overridable so tests don't
+    /// read/write the actual app's shared file on the machine running them.
+    private let directoryURL: URL
+
+    public init(directoryURL: URL = SharedStorageLocation.directoryURL) {
+        self.directoryURL = directoryURL
+    }
 
     private var snapshotURL: URL {
-        SharedStorageLocation.directoryURL.appendingPathComponent(SharedStorageLocation.snapshotFilename)
+        directoryURL.appendingPathComponent(SharedStorageLocation.snapshotFilename)
     }
 
     private var errorStateURL: URL {
-        SharedStorageLocation.directoryURL.appendingPathComponent(SharedStorageLocation.errorStateFilename)
+        directoryURL.appendingPathComponent(SharedStorageLocation.errorStateFilename)
+    }
+
+    private func ensureDirectoryExists() {
+        try? FileManager.default.createDirectory(at: directoryURL, withIntermediateDirectories: true)
     }
 
     public func save(_ snapshot: UsageSnapshot) throws {
-        SharedStorageLocation.ensureDirectoryExists()
+        ensureDirectoryExists()
         let data = try Self.makeEncoder().encode(snapshot)
         try data.write(to: snapshotURL, options: .atomic)
     }
@@ -31,7 +41,7 @@ public struct SharedUsageStore {
     }
 
     public func saveError(_ state: FetchErrorState) {
-        SharedStorageLocation.ensureDirectoryExists()
+        ensureDirectoryExists()
         guard let data = try? JSONEncoder().encode(state) else { return }
         try? data.write(to: errorStateURL, options: .atomic)
     }

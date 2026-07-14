@@ -7,10 +7,14 @@ struct UsageWidgetEntry: TimelineEntry {
     let errorState: FetchErrorState
 }
 
-/// Reads whatever the app last wrote to the shared storage location. Never
-/// makes a network call and never touches Keychain — if the app isn't
-/// running, this just keeps re-showing (and re-scheduling reloads of) the
-/// last known snapshot.
+/// Reads whatever the app last wrote to the shared storage location.
+/// Never makes a network call and never touches Keychain itself —
+/// instead, every time the system asks for a timeline (i.e. the widget
+/// is actually being rendered), it posts a Darwin notification asking
+/// the app to fetch fresh data if it's running (see
+/// `WidgetRefreshRequestObserver`). If the app isn't running to hear it,
+/// this just keeps re-showing (and re-scheduling reloads of) the last
+/// known snapshot.
 struct ClaudeUsageTimelineProvider: TimelineProvider {
     private let store = SharedUsageStore()
 
@@ -43,6 +47,9 @@ struct ClaudeUsageTimelineProvider: TimelineProvider {
     }
 
     func getTimeline(in context: Context, completion: @escaping (Timeline<UsageWidgetEntry>) -> Void) {
+        if !context.isPreview {
+            WidgetRefreshRequestObserver.postRefreshRequest()
+        }
         let entry = currentEntry()
         // Re-reads the same cache periodically so reset countdowns keep
         // advancing even if the app hasn't refreshed recently. The app

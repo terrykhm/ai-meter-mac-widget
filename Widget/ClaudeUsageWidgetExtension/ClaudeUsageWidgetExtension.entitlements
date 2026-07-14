@@ -8,5 +8,9 @@
 	<array>
 		<string>/Library/Application Support/ClaudeUsage/</string>
 	</array>
+	<key>com.apple.security.temporary-exception.mach-lookup.global-name</key>
+	<array>
+		<string>com.apple.system.notification_center</string>
+	</array>
 </dict>
 </plist>

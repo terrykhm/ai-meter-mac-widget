@@ -43,11 +43,4 @@ public enum SharedStorageLocation {
             .appendingPathComponent("Library/Application Support", isDirectory: true)
             .appendingPathComponent(directoryName, isDirectory: true)
     }
-
-    @discardableResult
-    static func ensureDirectoryExists() -> URL {
-        let url = directoryURL
-        try? FileManager.default.createDirectory(at: url, withIntermediateDirectories: true)
-        return url
-    }
 }
