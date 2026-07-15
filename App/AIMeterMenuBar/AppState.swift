@@ -29,14 +29,30 @@ final class AppState: ObservableObject {
         self.coordinator = UsageRefreshCoordinator(client: client)
         self.pollInterval = 300 // 5 minutes
 
-        self.snapshot = coordinator.lastSnapshot
-        self.lastError = coordinator.lastError
+        // No user-facing toggle for this — with no menu bar icon or Dock
+        // icon, the only way back into the app after a restart is Launch
+        // at Login, so it's just always on rather than something to opt
+        // into. `enable()` is a no-op if already registered, and
+        // best-effort fails silently if the app isn't in /Applications
+        // yet (e.g. running from Xcode's DerivedData during development).
+        LaunchAtLoginManager.enable()
 
         if let credentials = keychain.load(), !credentials.organizationId.isEmpty {
             authStatus = .signedIn
             startPolling()
             Task { await refresh() }
+        } else {
+            // No valid session — don't let a stale cached snapshot from
+            // a previous sign-in linger and make the widget look like
+            // it's showing live data for an account nobody's signed
+            // into anymore. Normally `signOut()` is what clears this,
+            // but the Keychain item can also go away by other means
+            // (deleted outside the app, iCloud Keychain removal, etc.).
+            coordinator.clearCachedState()
         }
+
+        self.snapshot = coordinator.lastSnapshot
+        self.lastError = coordinator.lastError
     }
 
     func beginSignIn() {
@@ -65,11 +81,20 @@ final class AppState: ObservableObject {
     func refresh() async {
         guard let credentials = keychain.load() else { return }
         let error = await coordinator.refresh(credentials: credentials)
+        if error == .sessionExpired {
+            // claude.ai confirmed this session is no longer valid (401,
+            // not just a network hiccup — see AIMeterDecodingError) —
+            // treat it exactly like the user hit "Sign out", clearing
+            // the Keychain item and cached snapshot too, not just the
+            // in-memory auth flag. Otherwise the stale Keychain item
+            // makes the next launch briefly think it's signed in again
+            // before the next failed refresh flips it back, and the
+            // widget keeps showing the last snapshot as if it were live.
+            signOut()
+            return
+        }
         snapshot = coordinator.lastSnapshot
         lastError = error
-        if error == .sessionExpired {
-            authStatus = .signedOut
-        }
     }
 
     private func completeSignIn(credentials: ClaudeSessionCredentials) async {

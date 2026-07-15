@@ -1,5 +1,6 @@
 import SwiftUI
 import WidgetKit
+import AppIntents
 import AIMeterKit
 
 /// Small + Medium + Large widget faces, styled per the "Warm Frosted"
@@ -60,16 +61,24 @@ struct AIMeterWidgetEntryView: View {
 /// well over a third of the widget's usable height. The per-size content
 /// below has been compressed hard to still fit everything without
 /// dropping any element.
+///
+/// Links to `aimeter://open` — same as `SignedOutView` — so it's a
+/// one-click way to reach Settings (sign out, adjust the poll interval)
+/// even while already signed in and looking at real usage data, since
+/// the widget itself has no other way to reach those controls.
 private struct AppBrandHeader: View {
     var compact: Bool = false
 
     var body: some View {
-        HStack(spacing: compact ? 5 : 6) {
-            AppLogoMark(size: compact ? 20 : 24)
-            Text("AI Meter")
-                .font(.system(size: compact ? 14 : 17, weight: .semibold))
-                .foregroundStyle(UsageColors.textPrimary)
+        Link(destination: URL(string: "aimeter://open")!) {
+            HStack(spacing: compact ? 5 : 6) {
+                AppLogoMark(size: compact ? 20 : 24)
+                Text("AI Meter")
+                    .font(.system(size: compact ? 14 : 17, weight: .semibold))
+                    .foregroundStyle(UsageColors.textPrimary)
+            }
         }
+        .buttonStyle(.plain)
     }
 }
 
@@ -104,6 +113,32 @@ private struct SignedOutView: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
         .buttonStyle(.plain)
+    }
+}
+
+/// "Updated Xm ago [· stale]" plus a small tap-to-refresh button. The
+/// button runs `RefreshUsageIntent` in place (macOS 14+ interactive
+/// widgets) rather than a `Link`, so tapping it doesn't open the app —
+/// it just posts the same refresh signal `getTimeline` already posts on
+/// every render, same rate limit and all (see `UsageRefreshCoordinator`).
+private struct LastUpdatedRow: View {
+    var snapshot: UsageSnapshot
+    var isStale: Bool
+    var fontSize: CGFloat = 10.5
+
+    var body: some View {
+        HStack(spacing: 4) {
+            Text(isStale ? "\(UsageFormatting.lastUpdatedString(snapshot)) · stale" : UsageFormatting.lastUpdatedString(snapshot))
+                .font(.system(size: fontSize))
+                .foregroundStyle(UsageColors.textSecondary(0.5))
+            Spacer(minLength: 4)
+            Button(intent: RefreshUsageIntent()) {
+                Image(systemName: "arrow.clockwise")
+                    .font(.system(size: fontSize, weight: .semibold))
+                    .foregroundStyle(UsageColors.textSecondary(0.7))
+            }
+            .buttonStyle(.plain)
+        }
     }
 }
 
@@ -203,11 +238,7 @@ private struct MediumSignedInView: View {
                 }
             }
 
-            if isStale {
-                Text("Stale — reopen AI Meter to refresh")
-                    .font(.system(size: 9))
-                    .foregroundStyle(UsageColors.textSecondary(0.5))
-            }
+            LastUpdatedRow(snapshot: snapshot, isStale: isStale, fontSize: 9)
         }
     }
 }
@@ -249,9 +280,7 @@ private struct LargeSignedInView: View {
             Spacer(minLength: 0)
 
             Divider()
-            Text(UsageFormatting.lastUpdatedString(snapshot))
-                .font(.system(size: 10.5))
-                .foregroundStyle(UsageColors.textSecondary(0.5))
+            LastUpdatedRow(snapshot: snapshot, isStale: isStale)
         }
     }
 }

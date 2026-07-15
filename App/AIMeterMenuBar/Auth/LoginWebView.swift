@@ -9,10 +9,16 @@ import WebKit
 /// differently than real Safari. `ManualSessionKeyView` is the fallback
 /// path for when that happens.
 struct LoginWebView: NSViewRepresentable {
+    /// Tracks whether the page is still loading, so the window can show a
+    /// spinner over it instead of blank space — a fresh `WKWebView` (or
+    /// one with a just-cleared cache) can take several seconds to
+    /// download and render claude.ai's JS bundle with no visual feedback
+    /// otherwise.
+    @Binding var isLoading: Bool
     var onSessionCookie: (_ sessionKey: String, _ lastActiveOrg: String?) -> Void
 
     func makeCoordinator() -> Coordinator {
-        Coordinator(onSessionCookie: onSessionCookie)
+        Coordinator(onSessionCookie: onSessionCookie, isLoading: $isLoading)
     }
 
     func makeNSView(context: Context) -> WKWebView {
@@ -28,10 +34,28 @@ struct LoginWebView: NSViewRepresentable {
 
     final class Coordinator: NSObject, WKNavigationDelegate, WKHTTPCookieStoreObserver {
         private let onSessionCookie: (_ sessionKey: String, _ lastActiveOrg: String?) -> Void
+        private let isLoading: Binding<Bool>
         private var didReport = false
 
-        init(onSessionCookie: @escaping (_ sessionKey: String, _ lastActiveOrg: String?) -> Void) {
+        init(onSessionCookie: @escaping (_ sessionKey: String, _ lastActiveOrg: String?) -> Void, isLoading: Binding<Bool>) {
             self.onSessionCookie = onSessionCookie
+            self.isLoading = isLoading
+        }
+
+        func webView(_ webView: WKWebView, didStartProvisionalNavigation navigation: WKNavigation!) {
+            isLoading.wrappedValue = true
+        }
+
+        func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
+            isLoading.wrappedValue = false
+        }
+
+        func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) {
+            isLoading.wrappedValue = false
+        }
+
+        func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) {
+            isLoading.wrappedValue = false
         }
 
         func cookiesDidChange(in cookieStore: WKHTTPCookieStore) {

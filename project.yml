@@ -62,6 +62,7 @@ targets:
       path: App/AIMeterMenuBar/Info.plist
       properties:
         LSUIElement: true
+        CFBundleName: AI Meter
         CFBundleDisplayName: AI Meter
         CFBundleShortVersionString: "1.0"
         CFBundleVersion: "1"

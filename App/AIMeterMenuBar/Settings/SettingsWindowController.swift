@@ -38,10 +38,18 @@ final class SettingsWindowController: NSObject, NSWindowDelegate {
         let rootView = SettingsView().environmentObject(appState)
         let hostingController = NSHostingController(rootView: rootView)
         let window = NSWindow(contentViewController: hostingController)
+        // Deliberately NOT adding .fullSizeContentView / transparent
+        // titlebar here — tried it for the warm-frosted restyle and it
+        // silently broke this window (no crash, no window ever appeared,
+        // across cold launch / reopen / the aimeter:// URL scheme). Given
+        // this window's documented history of subtle AppKit layout bugs
+        // (see type doc above), not worth the risk for a cosmetic
+        // titlebar effect — the SwiftUI content below still carries the
+        // warm-frosted look, just under a normal titlebar.
         window.title = "AI Meter"
         window.styleMask = [.titled, .closable]
         window.delegate = self
-        window.setContentSize(NSSize(width: 380, height: 320))
+        window.setContentSize(NSSize(width: 380, height: 350))
         window.center()
         window.makeKeyAndOrderFront(nil)
         self.window = window

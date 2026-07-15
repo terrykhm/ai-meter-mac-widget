@@ -13,27 +13,23 @@ struct ManualSessionKeyView: View {
     @State private var organizationId: String = ""
     @State private var validationMessage: String?
 
+    private var canSubmit: Bool {
+        sessionKey.trimmingCharacters(in: .whitespacesAndNewlines).count >= 10
+    }
+
     var body: some View {
-        VStack(alignment: .leading, spacing: 14) {
+        VStack(alignment: .leading, spacing: 16) {
             Text("Enter session key manually")
-                .font(.headline)
+                .font(.system(size: 15, weight: .semibold))
+                .foregroundStyle(UsageColors.textPrimary)
 
             Text("In Safari or Chrome, sign into claude.ai, then open Web Inspector → Storage/Application → Cookies → https://claude.ai. Copy the value of the sessionKey cookie (and lastActiveOrg, if present) and paste them below.")
                 .font(.caption)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(UsageColors.textSecondary())
                 .fixedSize(horizontal: false, vertical: true)
 
-            VStack(alignment: .leading, spacing: 6) {
-                Text("sessionKey").font(.caption.bold())
-                TextField("sk-ant-sid01-...", text: $sessionKey)
-                    .textFieldStyle(.roundedBorder)
-            }
-
-            VStack(alignment: .leading, spacing: 6) {
-                Text("lastActiveOrg (organization id)").font(.caption.bold())
-                TextField("org uuid", text: $organizationId)
-                    .textFieldStyle(.roundedBorder)
-            }
+            field(label: "sessionKey", placeholder: "sk-ant-sid01-...", text: $sessionKey)
+            field(label: "lastActiveOrg (organization id)", placeholder: "org uuid", text: $organizationId)
 
             if let validationMessage {
                 Text(validationMessage)
@@ -43,16 +39,45 @@ struct ManualSessionKeyView: View {
 
             HStack {
                 Button("Back", action: onBack)
+                    .buttonStyle(.plain)
+                    .font(.system(size: 12))
+                    .foregroundStyle(UsageColors.textSecondary())
                 Spacer()
-                Button("Sign in") {
-                    submit()
+                Button(action: submit) {
+                    Text("Sign in")
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, 20)
+                        .padding(.vertical, 8)
+                        .background(Capsule().fill(UsageColors.accent))
+                        .shadow(color: UsageColors.signInButtonShadow, radius: 10, x: 0, y: 4)
                 }
+                .buttonStyle(.plain)
                 .keyboardShortcut(.defaultAction)
-                .disabled(sessionKey.trimmingCharacters(in: .whitespacesAndNewlines).count < 10)
+                .disabled(!canSubmit)
+                .opacity(canSubmit ? 1 : 0.5)
             }
         }
-        .padding(20)
-        .frame(width: 480, height: 620, alignment: .top)
+        .padding(24)
+        .frame(width: 480, alignment: .top)
+        .frame(maxHeight: .infinity)
+    }
+
+    private func field(label: String, placeholder: String, text: Binding<String>) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text(label)
+                .font(.caption.bold())
+                .foregroundStyle(UsageColors.textPrimary)
+            TextField(placeholder, text: text)
+                .textFieldStyle(.plain)
+                .font(.system(size: 12.5))
+                .padding(10)
+                .background(Color.white.opacity(0.6), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 10, style: .continuous)
+                        .strokeBorder(UsageColors.textPrimary.opacity(0.12))
+                )
+        }
     }
 
     private func submit() {

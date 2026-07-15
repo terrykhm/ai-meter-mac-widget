@@ -1,28 +1,19 @@
 import Foundation
 import ServiceManagement
 
-/// Thin wrapper over `SMAppService` for the "Launch at Login" toggle.
+/// Thin wrapper over `SMAppService` for launch-at-login registration.
+/// Always enabled at startup (see `AppState.init`) — there's no user
+/// toggle for this.
 enum LaunchAtLoginManager {
-    static var isEnabled: Bool {
-        SMAppService.mainApp.status == .enabled
-    }
-
-    static func setEnabled(_ enabled: Bool) {
+    static func enable() {
+        guard SMAppService.mainApp.status != .enabled else { return }
         do {
-            if enabled {
-                if SMAppService.mainApp.status != .enabled {
-                    try SMAppService.mainApp.register()
-                }
-            } else {
-                if SMAppService.mainApp.status == .enabled {
-                    try SMAppService.mainApp.unregister()
-                }
-            }
+            try SMAppService.mainApp.register()
         } catch {
             // Best-effort: registration can fail if the app isn't in
             // /Applications yet (e.g. running from Xcode's DerivedData).
-            // Nothing destructive to roll back — the toggle just won't
-            // stick until the app is installed properly.
+            // Nothing destructive to roll back — it just won't stick
+            // until the app is installed properly.
         }
     }
 }
