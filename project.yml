@@ -77,6 +77,16 @@ targets:
               - aimeter
     settings:
       base:
+        # PRODUCT_NAME controls the actual built artifact's name — without
+        # it, this defaults to the Xcode target name below
+        # ("AIMeterMenuBar"), which is what people were seeing when they
+        # downloaded a release. The Xcode target itself is deliberately
+        # NOT renamed to match (that's a much bigger, riskier rename
+        # touching every path/scheme/comment in the project for the same
+        # cosmetic result) — CFBundleName/CFBundleDisplayName above
+        # already independently say "AI Meter" for in-app/system UI
+        # purposes; this is what makes the .app file on disk say it too.
+        PRODUCT_NAME: AI Meter
         PRODUCT_BUNDLE_IDENTIFIER: com.terrykhm.aimeter
         CODE_SIGN_STYLE: Automatic
         DEVELOPMENT_TEAM: 5DQVAL7YAZ

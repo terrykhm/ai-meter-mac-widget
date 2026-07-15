@@ -114,8 +114,8 @@ took (not just that Xcode shows no error), you can check from Terminal
 after building:
 
 ```sh
-codesign -dvv /path/to/AIMeterMenuBar.app 2>&1 | grep TeamIdentifier
-codesign -dvv /path/to/AIMeterMenuBar.app/Contents/PlugIns/AIMeterWidgetExtension.appex 2>&1 | grep TeamIdentifier
+codesign -dvv "/path/to/AI Meter.app" 2>&1 | grep TeamIdentifier
+codesign -dvv "/path/to/AI Meter.app/Contents/PlugIns/AIMeterWidgetExtension.appex" 2>&1 | grep TeamIdentifier
 ```
 
 Both should print your real Team ID (not "not set") — if either shows
@@ -157,9 +157,9 @@ xcrun notarytool store-credentials "AC_PASSWORD" --apple-id "you@example.com" --
 # Every release: archive, export, notarize, staple.
 xcodebuild archive -project AIMeter.xcodeproj -scheme AIMeterMenuBar -configuration Release -archivePath /tmp/AIMeter.xcarchive
 xcodebuild -exportArchive -archivePath /tmp/AIMeter.xcarchive -exportPath /tmp/AIMeter-export -exportOptionsPlist ExportOptions.plist
-ditto -c -k --keepParent /tmp/AIMeter-export/AIMeterMenuBar.app /tmp/AIMeter-notarize.zip
+ditto -c -k --keepParent "/tmp/AIMeter-export/AI Meter.app" /tmp/AIMeter-notarize.zip
 xcrun notarytool submit /tmp/AIMeter-notarize.zip --keychain-profile "AC_PASSWORD" --wait
-xcrun stapler staple /tmp/AIMeter-export/AIMeterMenuBar.app
+xcrun stapler staple "/tmp/AIMeter-export/AI Meter.app"
 ```
 
 `ExportOptions.plist` needs `method: developer-id`, your `teamID`, and
@@ -181,7 +181,7 @@ account needed on the installing machine.
 - **Recommended: unzip and drag the app into /Applications yourself.**
   Download `AI-Meter.zip` from the
   [releases page](https://github.com/terrykhm/ai-meter-mac-widget/releases/latest),
-  double-click it in Finder to unzip, then drag `AIMeterMenuBar.app`
+  double-click it in Finder to unzip, then drag `AI Meter.app`
   into Applications. Dragging via Finder (rather than launching it
   in-place from wherever it unzipped) avoids macOS's App Translocation,
   which otherwise runs a freshly-downloaded app from a hidden temporary
@@ -191,10 +191,10 @@ account needed on the installing machine.
   ```sh
   curl -fsSL -o /tmp/AIMeter.zip https://github.com/terrykhm/ai-meter-mac-widget/releases/latest/download/AI-Meter.zip && \
   ditto -x -k /tmp/AIMeter.zip /tmp/AIMeter-extracted && \
-  xattr -cr /tmp/AIMeter-extracted/AIMeterMenuBar.app && \
-  rm -rf /Applications/AIMeterMenuBar.app && \
-  mv /tmp/AIMeter-extracted/AIMeterMenuBar.app /Applications/ && \
-  open /Applications/AIMeterMenuBar.app && \
+  xattr -cr "/tmp/AIMeter-extracted/AI Meter.app" && \
+  rm -rf "/Applications/AI Meter.app" && \
+  mv "/tmp/AIMeter-extracted/AI Meter.app" /Applications/ && \
+  open "/Applications/AI Meter.app" && \
   rm -rf /tmp/AIMeter-extracted /tmp/AIMeter.zip
   ```
   This always grabs whatever the latest release is, so it doesn't go
@@ -225,7 +225,7 @@ Cookies → `https://claude.ai`, copy the `sessionKey` value, and paste it in.
 
 **Widget shows stale data.** The widget only reads what the app last wrote;
 it never fetches on its own. The app has no menu bar icon — reopen it
-(double-click `AI Meter.app`/`AIMeterMenuBar.app` again in Finder or
+(double-click `AI Meter.app` again in Finder or
 Spotlight while it's already running) to bring up Settings and trigger a
 refresh.
 
@@ -240,7 +240,7 @@ are actually signed with your real Team ID (step 3 above) and it's still
 missing, force a re-scan:
 
 ```sh
-pluginkit -a /path/to/AIMeterMenuBar.app/Contents/PlugIns/AIMeterWidgetExtension.appex
+pluginkit -a "/path/to/AI Meter.app/Contents/PlugIns/AIMeterWidgetExtension.appex"
 pluginkit -m -v -p com.apple.widgetkit-extension | grep -i aimeter
 ```
 
