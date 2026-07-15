@@ -178,20 +178,27 @@ is signed and notarized by Apple, so it just opens normally — no
 Gatekeeper warnings, no "unidentified developer" dialogs, no developer
 account needed on the installing machine.
 
-- **Recommended: download and double-click
-  ["AI-Meter-Installer.command"](https://github.com/terrykhm/ai-meter-mac-widget/releases/latest/download/AI-Meter-Installer.command)**
-  from the releases page. It downloads the latest release, installs it
-  to /Applications, and launches it, printing progress and a clear "✓
-  Done" message (plus a notification) when finished. It also clears the
-  quarantine flag before first launch — not to get past a warning (there
-  isn't one), but to avoid macOS's App Translocation, which otherwise
-  runs a freshly-downloaded app from a hidden temporary path instead of
-  /Applications and can make the widget's registration disappear after
-  a reboot.
-- **Alternative: unzip and drag the app into /Applications yourself**
-  (Finder → double-click the downloaded zip → drag `AIMeterMenuBar.app`
-  into Applications). Dragging via Finder, rather than opening it
-  in-place, avoids the same App Translocation issue.
+- **Recommended: unzip and drag the app into /Applications yourself.**
+  Download `AI-Meter.zip` from the
+  [releases page](https://github.com/terrykhm/ai-meter-mac-widget/releases/latest),
+  double-click it in Finder to unzip, then drag `AIMeterMenuBar.app`
+  into Applications. Dragging via Finder (rather than launching it
+  in-place from wherever it unzipped) avoids macOS's App Translocation,
+  which otherwise runs a freshly-downloaded app from a hidden temporary
+  path and can make the widget's registration disappear after a reboot.
+- **Alternative: paste this into Terminal** if you'd rather not touch
+  Finder:
+  ```sh
+  curl -fsSL -o /tmp/AIMeter.zip https://github.com/terrykhm/ai-meter-mac-widget/releases/latest/download/AI-Meter.zip && \
+  ditto -x -k /tmp/AIMeter.zip /tmp/AIMeter-extracted && \
+  xattr -cr /tmp/AIMeter-extracted/AIMeterMenuBar.app && \
+  rm -rf /Applications/AIMeterMenuBar.app && \
+  mv /tmp/AIMeter-extracted/AIMeterMenuBar.app /Applications/ && \
+  open /Applications/AIMeterMenuBar.app && \
+  rm -rf /tmp/AIMeter-extracted /tmp/AIMeter.zip
+  ```
+  This always grabs whatever the latest release is, so it doesn't go
+  stale as new versions ship.
 - **Alternative: clone and build on each Mac** (Setup steps 1–3) if you'd
   rather build from source than trust a prebuilt binary.
 
@@ -251,10 +258,10 @@ App Translocation — launched from a hidden randomized path instead of
 its quarantine flag ever being cleared or without being dragged into
 /Applications through Finder. That temporary path doesn't survive a
 reboot, so the widget's registration silently breaks. Fix: quit the
-app, delete it, and reinstall via the `AI-Meter-Installer.command`
-script or by dragging it into /Applications from Finder rather than
-running it in place — check `ps aux | grep AIMeterMenuBar` for a path
-containing `AppTranslocation` to confirm this is what happened.
+app, delete it, and reinstall by dragging it into /Applications from
+Finder rather than running it in place — check `ps aux | grep
+AIMeterMenuBar` for a path containing `AppTranslocation` to confirm
+this is what happened.
 
 ## License
 
