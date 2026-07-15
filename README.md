@@ -151,11 +151,24 @@ That's a pure client-side flag (a `com.apple.quarantine` extended
 attribute set on download) — clearing it before first launch avoids
 the block entirely.
 
-- **Recommended: install with one Terminal command.** This downloads
-  the latest release, clears the quarantine flag *before* ever launching
-  the app through Finder, and installs it — so Gatekeeper's launch-time
-  check never triggers in the first place. No "Open Anyway" hunting
-  through System Settings, no developer account of any kind:
+- **Recommended: download and double-click
+  ["AI-Meter-Installer.command"](https://github.com/terrykhm/ai-meter-mac-widget/releases/latest/download/AI-Meter-Installer.command)**
+  from the [GitHub Releases](https://github.com/terrykhm/ai-meter-mac-widget/releases/latest)
+  page. It's a plain shell script, not a compiled app — double-clicking
+  it opens Terminal, and it downloads the latest release, clears the
+  quarantine flag *before* ever launching the app through Finder,
+  installs it to /Applications, and launches it, printing progress the
+  whole way and a clear "✓ Done" message (plus a notification) when
+  it's finished. Because it's a script rather than a signed app bundle,
+  it doesn't hit Gatekeeper's notarization check at all on first
+  double-click, unlike an installer packaged as its own `.app` would —
+  no "Open Anyway" hunting through System Settings, no developer
+  account of any kind. If macOS still shows a one-time "are you sure
+  you want to open this?" prompt for the downloaded script itself,
+  choose **Open**.
+
+- **Alternative: paste the same steps directly into Terminal**, if
+  you'd rather not download a script or want to see exactly what runs:
 
   ```sh
   curl -fsSL -o /tmp/AIMeter.zip https://github.com/terrykhm/ai-meter-mac-widget/releases/latest/download/AI-Meter.zip && \
@@ -167,21 +180,8 @@ the block entirely.
   rm -rf /tmp/AIMeter-extracted /tmp/AIMeter.zip
   ```
 
-  Paste that whole block into Terminal and press Return. It always grabs
-  whatever the latest release is, so it doesn't go stale as new versions
-  ship.
-
-- **Alternative: double-click "AI Meter Installer.app"** from the
-  [GitHub Releases](https://github.com/terrykhm/ai-meter-mac-widget/releases/latest)
-  zip. This has its own proper icon and does the same install for you —
-  but it's itself an unnotarized app downloaded from the internet, so it
-  can hit the *exact same* Gatekeeper block on its own first launch
-  ("Apple could not verify ... Move to Trash", no "Open Anyway" button on
-  recent macOS). If that happens, don't move it to Trash — just use the
-  Terminal command above instead, or clear its quarantine flag first:
-  ```sh
-  xattr -cr "/path/to/AI Meter Installer.app"
-  ```
+  Both this and the script above always grab whatever the latest
+  release is, so neither goes stale as new versions ship.
 
 - **Alternative: clone and build on each Mac.** Repeat Setup steps 1–3 on
   the other laptop (same Apple ID signed into Xcode). A locally
