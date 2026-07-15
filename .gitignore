@@ -17,6 +17,11 @@ Packages/AIMeterKit/.build/
 # macOS
 .DS_Store
 
+# Built app bundles are published via GitHub Releases only, not committed —
+# they embed this developer's code-signing certificate identity, which
+# doesn't need to be duplicated across every commit that rebuilds them.
+dist/
+
 # Local secrets / captured session data (never commit real cookies or endpoint captures with live data)
 *.env
 Docs/ENDPOINT_NOTES.local.md

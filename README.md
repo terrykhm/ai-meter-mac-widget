@@ -158,7 +158,7 @@ distribution flow:
   entirely (only a paid Apple Developer Program membership + notarization
   does), but it only takes one bypass:
 
-  - **Easiest: [GitHub Releases](https://github.com/terrykhm/ai-meter-mac-widget/releases/latest)**
+  - **[GitHub Releases](https://github.com/terrykhm/ai-meter-mac-widget/releases/latest)**
     — download the zip, unzip it, double-click **"AI Meter
     Installer.app"** (a small native app, not a Terminal script — it has
     its own proper icon). It moves `AIMeterMenuBar.app` to
@@ -166,26 +166,22 @@ distribution flow:
     installer app itself will still trigger one "unidentified developer"
     warning the first time (right-click → Open to clear it) since it's
     also a file downloaded from the internet — that one click is as far
-    as this can be automated without paid notarization.
-  - **Manual:** grab just the app —
-    [`dist/AIMeterMenuBar.app`](dist/AIMeterMenuBar.app) is the
-    same build checked directly into the repo (a plain `git clone` gets
-    you a working copy without needing Xcode at all) — then clear
-    Gatekeeper yourself:
+    as this can be automated without paid notarization. Alternatively,
+    clear Gatekeeper yourself on the plain `.app` from the zip:
     ```sh
     xattr -cr /Applications/AIMeterMenuBar.app
     ```
     or right-click the app → **Open**, or **System Settings → Privacy &
     Security** → **Open Anyway**.
 
-  Either path is a one-time step per Mac. The widget should still
+  This is a one-time step per Mac. The widget should still
   self-register with `pluginkitd` normally on a properly signed copy; if
   it doesn't show up in the widget gallery, re-run the `pluginkit -a`
   step from Troubleshooting below.
 
-  Both are point-in-time snapshots, not something CI keeps in sync with
-  source — they'll drift stale after future source changes until
-  manually rebuilt and re-uploaded/recommitted.
+  Releases are point-in-time snapshots, not something CI keeps in sync
+  with source — they'll drift stale after future source changes until a
+  new one is built and published.
 
 Either way, sign-in and the shared usage snapshot are per-machine — the
 Keychain-stored session and the file under `~/Library/Application
