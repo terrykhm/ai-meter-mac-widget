@@ -29,6 +29,7 @@ final class SettingsWindowController: NSObject, NSWindowDelegate {
 
     func show(appState: AppState) {
         NSApp.activate(ignoringOtherApps: true)
+        appState.prefetchSignInPageIfNeeded()
 
         if let window {
             window.makeKeyAndOrderFront(nil)

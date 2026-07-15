@@ -23,6 +23,7 @@ final class AppState: ObservableObject {
     private let client: AIMeterClient = AIMeterAPIClient()
     private let coordinator: UsageRefreshCoordinator
     private let loginWindowController = LoginWindowController()
+    private let loginPagePrefetcher = LoginPagePrefetcher()
     private var widgetPresenceTask: Task<Void, Never>?
 
     init() {
@@ -55,8 +56,17 @@ final class AppState: ObservableObject {
         self.lastError = coordinator.lastError
     }
 
+    /// Called when Settings opens while signed out, so the login page's
+    /// assets are already warm in cache by the time the user actually
+    /// clicks "Sign in" — see `LoginPagePrefetcher`.
+    func prefetchSignInPageIfNeeded() {
+        guard authStatus == .signedOut else { return }
+        loginPagePrefetcher.prefetch()
+    }
+
     func beginSignIn() {
         authStatus = .signingIn
+        loginPagePrefetcher.stop()
         loginWindowController.present(
             onComplete: { [weak self] credentials in
                 Task { await self?.completeSignIn(credentials: credentials) }
