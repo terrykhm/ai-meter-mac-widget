@@ -158,7 +158,7 @@ distribution flow:
   entirely (only a paid Apple Developer Program membership + notarization
   does), but it only takes one bypass:
 
-  - **Easiest: [GitHub Releases](https://github.com/terrykhm/claude-token-usage-mac-widget/releases/latest)**
+  - **Easiest: [GitHub Releases](https://github.com/terrykhm/ai-meter-mac-widget/releases/latest)**
     — download the zip, unzip it, double-click **"AI Meter
     Installer.app"** (a small native app, not a Terminal script — it has
     its own proper icon). It moves `AIMeterMenuBar.app` to
