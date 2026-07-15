@@ -9,15 +9,24 @@ name: AIMeter
 # `xcodegen generate` regenerates the .xcodeproj from this file every
 # time, which silently wipes out any Team selected only in Xcode's
 # Signing & Capabilities UI. Find your own Team ID via Keychain Access:
-# login keychain -> My Certificates -> your "Apple Development: ..."
-# certificate -> Details -> Organizational Unit. Works for a free
-# Personal Team too, not just paid memberships.
+# login keychain -> My Certificates -> your certificate -> Details ->
+# Organizational Unit.
 #
-# Neither target declares an App Group — that's intentional, so this
-# builds and runs on a free Apple ID/Personal Team, which Apple blocks
-# from using the App Groups capability. The app and widget instead share
-# data via a plain file under ~/Library/Application Support/AIMeter/
-# (see Packages/AIMeterKit/Sources/AIMeterKit/Storage/).
+# Debug builds sign with the free-tier "Apple Development" identity via
+# Automatic signing, for local run/debug — this still works on a plain
+# free Apple ID with no paid Developer Program membership, so cloning and
+# building from source doesn't require paying Apple anything. Release
+# builds (what gets archived/notarized/distributed) sign with a paid
+# "Developer ID Application" identity instead — see "Distribution
+# builds" in README.md for the notarization steps that requires.
+#
+# Neither target declares an App Group. That's not a hard requirement
+# anymore (this Team ID does now have a paid membership, which unlocks
+# App Groups) — it's just that the existing plain-file/temporary-exception
+# approach already works, including through notarization, so there's been
+# no reason to migrate it. The app and widget share data via a plain file
+# under ~/Library/Application Support/AIMeter/ (see
+# Packages/AIMeterKit/Sources/AIMeterKit/Storage/).
 #
 # The widget extension target DOES declare App Sandbox (see its
 # .entitlements file) — macOS requires that for a WidgetKit extension to
@@ -57,6 +66,7 @@ targets:
         CFBundleShortVersionString: "1.0"
         CFBundleVersion: "1"
         NSHumanReadableCopyright: ""
+        LSApplicationCategoryType: public.app-category.utilities
         # aimeter:// — lets the widget's signed-out state open the app
         # (it can't host the real WKWebView sign-in flow itself). See
         # AppDelegate.application(_:open:).
@@ -72,6 +82,16 @@ targets:
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         MARKETING_VERSION: "1.0"
         SWIFT_VERSION: "5.0"
+      configs:
+        # Debug stays on the free-tier "Apple Development" identity via
+        # Automatic signing, for local run/debug. Release switches to the
+        # paid "Developer ID Application" identity (Manual — Developer ID
+        # doesn't use provisioning profiles) with Hardened Runtime, which
+        # notarization requires.
+        Release:
+          CODE_SIGN_STYLE: Manual
+          CODE_SIGN_IDENTITY: "Developer ID Application"
+          ENABLE_HARDENED_RUNTIME: YES
 
   AIMeterWidgetExtension:
     type: app-extension
@@ -105,6 +125,11 @@ targets:
         CURRENT_PROJECT_VERSION: "1"
         SWIFT_VERSION: "5.0"
         CODE_SIGN_ENTITLEMENTS: Widget/AIMeterWidgetExtension/AIMeterWidgetExtension.entitlements
+      configs:
+        Release:
+          CODE_SIGN_STYLE: Manual
+          CODE_SIGN_IDENTITY: "Developer ID Application"
+          ENABLE_HARDENED_RUNTIME: YES
 
 schemes:
   AIMeterMenuBar:

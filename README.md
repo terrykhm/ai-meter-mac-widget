@@ -136,63 +136,68 @@ have it.
 Open Notification Center (or your desktop) → "Edit Widgets" → search
 "AI Meter" → add the Small, Medium, or Large size.
 
+### 6. Distribution builds (notarized)
+
+Steps 1–5 above are for local development (Debug config, free-tier
+"Apple Development" signing). Release builds — the ones published on
+[GitHub Releases](https://github.com/terrykhm/ai-meter-mac-widget/releases/latest) —
+are signed with a paid "Developer ID Application" certificate and
+notarized by Apple, so Gatekeeper accepts them with no warnings at all
+on any Mac, not just the one that built them. That needs a paid Apple
+Developer Program membership on this Team ID, plus:
+
+```sh
+# One-time: generate a Developer ID Application certificate via
+# Xcode → Settings → Accounts → Manage Certificates → + → Developer ID
+# Application. And store notarization credentials (prompts for an
+# app-specific password from appleid.apple.com, not your Apple ID
+# password):
+xcrun notarytool store-credentials "AC_PASSWORD" --apple-id "you@example.com" --team-id "YOUR_TEAM_ID"
+
+# Every release: archive, export, notarize, staple.
+xcodebuild archive -project AIMeter.xcodeproj -scheme AIMeterMenuBar -configuration Release -archivePath /tmp/AIMeter.xcarchive
+xcodebuild -exportArchive -archivePath /tmp/AIMeter.xcarchive -exportPath /tmp/AIMeter-export -exportOptionsPlist ExportOptions.plist
+ditto -c -k --keepParent /tmp/AIMeter-export/AIMeterMenuBar.app /tmp/AIMeter-notarize.zip
+xcrun notarytool submit /tmp/AIMeter-notarize.zip --keychain-profile "AC_PASSWORD" --wait
+xcrun stapler staple /tmp/AIMeter-export/AIMeterMenuBar.app
+```
+
+`ExportOptions.plist` needs `method: developer-id`, your `teamID`, and
+`signingCertificate: "Developer ID Application"` — it's not committed to
+this repo (nothing sensitive in it, just not needed by anyone building
+Debug-only). A plain `xcodebuild build` (rather than `archive` +
+`-exportArchive`) will *not* produce a notarizable build even in
+Release config — it always includes the `get-task-allow` debug
+entitlement and skips secure timestamping, both of which notarization
+rejects.
+
 ## Installing on another Mac
 
-This project only ever uses a free "Personal Team" Apple ID (see
-"Prerequisites" above) — there's no paid Apple Developer Program
-membership, so builds are signed with a local "Apple Development"
-certificate, not a "Developer ID Application" certificate, and are never
-notarized. **This does not mean you need an Apple Developer account to
-install it** — nothing on the installing machine needs any Apple
-account at all. It just means Gatekeeper, macOS's "is this app
-trustworthy" check, has no way to vouch for it, and blocks the first
-launch of anything downloaded from the internet that isn't notarized.
-That's a pure client-side flag (a `com.apple.quarantine` extended
-attribute set on download) — clearing it before first launch avoids
-the block entirely.
+Every [GitHub Release](https://github.com/terrykhm/ai-meter-mac-widget/releases/latest)
+is signed and notarized by Apple, so it just opens normally — no
+Gatekeeper warnings, no "unidentified developer" dialogs, no developer
+account needed on the installing machine.
 
 - **Recommended: download and double-click
   ["AI-Meter-Installer.command"](https://github.com/terrykhm/ai-meter-mac-widget/releases/latest/download/AI-Meter-Installer.command)**
-  from the [GitHub Releases](https://github.com/terrykhm/ai-meter-mac-widget/releases/latest)
-  page. It's a plain shell script, not a compiled app — double-clicking
-  it opens Terminal, and it downloads the latest release, clears the
-  quarantine flag *before* ever launching the app through Finder,
-  installs it to /Applications, and launches it, printing progress the
-  whole way and a clear "✓ Done" message (plus a notification) when
-  it's finished. Because it's a script rather than a signed app bundle,
-  it doesn't hit Gatekeeper's notarization check at all on first
-  double-click, unlike an installer packaged as its own `.app` would —
-  no "Open Anyway" hunting through System Settings, no developer
-  account of any kind. If macOS still shows a one-time "are you sure
-  you want to open this?" prompt for the downloaded script itself,
-  choose **Open**.
+  from the releases page. It downloads the latest release, installs it
+  to /Applications, and launches it, printing progress and a clear "✓
+  Done" message (plus a notification) when finished. It also clears the
+  quarantine flag before first launch — not to get past a warning (there
+  isn't one), but to avoid macOS's App Translocation, which otherwise
+  runs a freshly-downloaded app from a hidden temporary path instead of
+  /Applications and can make the widget's registration disappear after
+  a reboot.
+- **Alternative: unzip and drag the app into /Applications yourself**
+  (Finder → double-click the downloaded zip → drag `AIMeterMenuBar.app`
+  into Applications). Dragging via Finder, rather than opening it
+  in-place, avoids the same App Translocation issue.
+- **Alternative: clone and build on each Mac** (Setup steps 1–3) if you'd
+  rather build from source than trust a prebuilt binary.
 
-- **Alternative: paste the same steps directly into Terminal**, if
-  you'd rather not download a script or want to see exactly what runs:
-
-  ```sh
-  curl -fsSL -o /tmp/AIMeter.zip https://github.com/terrykhm/ai-meter-mac-widget/releases/latest/download/AI-Meter.zip && \
-  ditto -x -k /tmp/AIMeter.zip /tmp/AIMeter-extracted && \
-  xattr -cr /tmp/AIMeter-extracted/AIMeterMenuBar.app && \
-  rm -rf /Applications/AIMeterMenuBar.app && \
-  mv /tmp/AIMeter-extracted/AIMeterMenuBar.app /Applications/ && \
-  open /Applications/AIMeterMenuBar.app && \
-  rm -rf /tmp/AIMeter-extracted /tmp/AIMeter.zip
-  ```
-
-  Both this and the script above always grab whatever the latest
-  release is, so neither goes stale as new versions ship.
-
-- **Alternative: clone and build on each Mac.** Repeat Setup steps 1–3 on
-  the other laptop (same Apple ID signed into Xcode). A locally
-  Xcode-built app is automatically trusted by Gatekeeper on the machine
-  that built it, so this avoids the quarantine flag entirely — but it
-  does require Xcode and the setup steps above on every machine.
-
-Any of these is a one-time step per Mac. The widget should still
-self-register with `pluginkitd` normally on a properly signed copy; if
-it doesn't show up in the widget gallery, re-run the `pluginkit -a` step
-from Troubleshooting below.
+Any of these is a one-time step per Mac. The widget should self-register
+with `pluginkitd` automatically; if it doesn't show up in the widget
+gallery, re-run the `pluginkit -a` step from Troubleshooting below.
 
 Releases are point-in-time snapshots, not something CI keeps in sync
 with source — they'll drift stale after future source changes until a
@@ -238,6 +243,18 @@ The second command should print a line for `com.terrykhm.aimeter.widget`
 exists and is wired up via `CODE_SIGN_ENTITLEMENTS` in `project.yml` — the
 widget target must have App Sandbox enabled for registration to work at
 all, even though the main app deliberately isn't sandboxed.
+
+**Widget worked, then disappeared after a reboot (only on a downloaded
+copy, not one built from source).** The app likely got run via macOS's
+App Translocation — launched from a hidden randomized path instead of
+/Applications, which happens when a quarantined app is opened without
+its quarantine flag ever being cleared or without being dragged into
+/Applications through Finder. That temporary path doesn't survive a
+reboot, so the widget's registration silently breaks. Fix: quit the
+app, delete it, and reinstall via the `AI-Meter-Installer.command`
+script or by dragging it into /Applications from Finder rather than
+running it in place — check `ps aux | grep AIMeterMenuBar` for a path
+containing `AppTranslocation` to confirm this is what happened.
 
 ## License
 
