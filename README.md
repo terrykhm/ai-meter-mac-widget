@@ -142,46 +142,61 @@ This project only ever uses a free "Personal Team" Apple ID (see
 "Prerequisites" above) — there's no paid Apple Developer Program
 membership, so builds are signed with a local "Apple Development"
 certificate, not a "Developer ID Application" certificate, and are never
-notarized. That rules out the usual "build once, copy the .app anywhere"
-distribution flow:
+notarized. **This does not mean you need an Apple Developer account to
+install it** — nothing on the installing machine needs any Apple
+account at all. It just means Gatekeeper, macOS's "is this app
+trustworthy" check, has no way to vouch for it, and blocks the first
+launch of anything downloaded from the internet that isn't notarized.
+That's a pure client-side flag (a `com.apple.quarantine` extended
+attribute set on download) — clearing it before first launch avoids
+the block entirely.
 
-- **Recommended: clone and build on each Mac.** Repeat Setup steps 1–3 on
+- **Recommended: install with one Terminal command.** This downloads
+  the latest release, clears the quarantine flag *before* ever launching
+  the app through Finder, and installs it — so Gatekeeper's launch-time
+  check never triggers in the first place. No "Open Anyway" hunting
+  through System Settings, no developer account of any kind:
+
+  ```sh
+  curl -fsSL -o /tmp/AIMeter.zip https://github.com/terrykhm/ai-meter-mac-widget/releases/latest/download/AI-Meter.zip && \
+  ditto -x -k /tmp/AIMeter.zip /tmp/AIMeter-extracted && \
+  xattr -cr /tmp/AIMeter-extracted/AIMeterMenuBar.app && \
+  rm -rf /Applications/AIMeterMenuBar.app && \
+  mv /tmp/AIMeter-extracted/AIMeterMenuBar.app /Applications/ && \
+  open /Applications/AIMeterMenuBar.app && \
+  rm -rf /tmp/AIMeter-extracted /tmp/AIMeter.zip
+  ```
+
+  Paste that whole block into Terminal and press Return. It always grabs
+  whatever the latest release is, so it doesn't go stale as new versions
+  ship.
+
+- **Alternative: double-click "AI Meter Installer.app"** from the
+  [GitHub Releases](https://github.com/terrykhm/ai-meter-mac-widget/releases/latest)
+  zip. This has its own proper icon and does the same install for you —
+  but it's itself an unnotarized app downloaded from the internet, so it
+  can hit the *exact same* Gatekeeper block on its own first launch
+  ("Apple could not verify ... Move to Trash", no "Open Anyway" button on
+  recent macOS). If that happens, don't move it to Trash — just use the
+  Terminal command above instead, or clear its quarantine flag first:
+  ```sh
+  xattr -cr "/path/to/AI Meter Installer.app"
+  ```
+
+- **Alternative: clone and build on each Mac.** Repeat Setup steps 1–3 on
   the other laptop (same Apple ID signed into Xcode). A locally
   Xcode-built app is automatically trusted by Gatekeeper on the machine
-  that built it, so this avoids any signing/notarization issues entirely
-  — it's also exactly the flow this whole repo is already set up for.
-- **Copying the built `.app` instead** (AirDrop, USB drive, etc.) mostly
-  works, but expect friction: Gatekeeper will likely block the first
-  launch on the new Mac ("Apple could not verify ... is free of malware")
-  since it wasn't built there. This is a free "Personal Team" signed
-  build, not notarized — no client-side trick eliminates this warning
-  entirely (only a paid Apple Developer Program membership + notarization
-  does), but it only takes one bypass:
+  that built it, so this avoids the quarantine flag entirely — but it
+  does require Xcode and the setup steps above on every machine.
 
-  - **[GitHub Releases](https://github.com/terrykhm/ai-meter-mac-widget/releases/latest)**
-    — download the zip, unzip it, double-click **"AI Meter
-    Installer.app"** (a small native app, not a Terminal script — it has
-    its own proper icon). It moves `AIMeterMenuBar.app` to
-    /Applications, clears its quarantine flag, and launches it. The
-    installer app itself will still trigger one "unidentified developer"
-    warning the first time (right-click → Open to clear it) since it's
-    also a file downloaded from the internet — that one click is as far
-    as this can be automated without paid notarization. Alternatively,
-    clear Gatekeeper yourself on the plain `.app` from the zip:
-    ```sh
-    xattr -cr /Applications/AIMeterMenuBar.app
-    ```
-    or right-click the app → **Open**, or **System Settings → Privacy &
-    Security** → **Open Anyway**.
+Any of these is a one-time step per Mac. The widget should still
+self-register with `pluginkitd` normally on a properly signed copy; if
+it doesn't show up in the widget gallery, re-run the `pluginkit -a` step
+from Troubleshooting below.
 
-  This is a one-time step per Mac. The widget should still
-  self-register with `pluginkitd` normally on a properly signed copy; if
-  it doesn't show up in the widget gallery, re-run the `pluginkit -a`
-  step from Troubleshooting below.
-
-  Releases are point-in-time snapshots, not something CI keeps in sync
-  with source — they'll drift stale after future source changes until a
-  new one is built and published.
+Releases are point-in-time snapshots, not something CI keeps in sync
+with source — they'll drift stale after future source changes until a
+new one is built and published.
 
 Either way, sign-in and the shared usage snapshot are per-machine — the
 Keychain-stored session and the file under `~/Library/Application
