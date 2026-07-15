@@ -12,7 +12,7 @@ DerivedData/
 # Swift Package Manager
 .build/
 .swiftpm/
-Packages/ClaudeUsageKit/.build/
+Packages/AIMeterKit/.build/
 
 # macOS
 .DS_Store

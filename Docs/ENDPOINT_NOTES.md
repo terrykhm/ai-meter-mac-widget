@@ -1,6 +1,6 @@
 # Endpoint capture notes
 
-`ClaudeUsageEndpoints.swift` and `ClaudeUsageAPIClient.swift` target an
+`AIMeterEndpoints.swift` and `AIMeterAPIClient.swift` target an
 **undocumented** claude.ai internal API. The shape below was captured from
 a real, logged-in browser session (via the Claude in Chrome MCP driving an
 actual signed-in claude.ai tab) and is now what the client code implements.
@@ -100,6 +100,6 @@ Notable surprises vs. the original placeholder guess:
 ## Mapping notes
 
 Implemented in:
-- `Packages/ClaudeUsageKit/Sources/ClaudeUsageKit/Networking/ClaudeUsageEndpoints.swift` — confirmed path.
-- `Packages/ClaudeUsageKit/Sources/ClaudeUsageKit/Networking/ClaudeUsageAPIClient.swift` — `UsageResponseDTO` (only declares `five_hour`/`seven_day`; unknown keys are ignored by `Decodable`) and its mapping into `UsageSnapshot`.
-- `Packages/ClaudeUsageKit/Tests/ClaudeUsageKitTests/ClaudeUsageAPIClientTests.swift` — fixture test using this (redacted) sample response.
+- `Packages/AIMeterKit/Sources/AIMeterKit/Networking/AIMeterEndpoints.swift` — confirmed path.
+- `Packages/AIMeterKit/Sources/AIMeterKit/Networking/AIMeterAPIClient.swift` — `UsageResponseDTO` (only declares `five_hour`/`seven_day`; unknown keys are ignored by `Decodable`) and its mapping into `UsageSnapshot`.
+- `Packages/AIMeterKit/Tests/AIMeterKitTests/AIMeterAPIClientTests.swift` — fixture test using this (redacted) sample response.

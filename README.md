@@ -36,12 +36,12 @@ which requires an Admin API key from an API organization.
 
 ## What's in this repo
 
-- `Packages/ClaudeUsageKit/` — shared, UI-free Swift package: usage data
+- `Packages/AIMeterKit/` — shared, UI-free Swift package: usage data
   models, the (unofficial) networking client, shared-file-backed storage,
   and the polling coordinator. Used by both targets below.
-- `App/ClaudeUsageMenuBar/` — the menu bar app: sign-in flow, popover UI,
+- `App/AIMeterMenuBar/` — the menu bar app: sign-in flow, popover UI,
   settings.
-- `Widget/ClaudeUsageWidgetExtension/` — the WidgetKit extension (Small +
+- `Widget/AIMeterWidgetExtension/` — the WidgetKit extension (Small +
   Medium sizes) that reads the latest snapshot the app wrote.
 - `project.yml` — [XcodeGen](https://github.com/yonaskolb/XcodeGen) manifest.
   The `.xcodeproj` itself is not committed; you generate it locally.
@@ -55,7 +55,7 @@ which requires an Admin API key from an API organization.
 - An Apple ID signed into Xcode (Xcode → Settings → Accounts). A free
   "Personal Team" is enough — no paid Apple Developer Program membership
   needed. That's exactly why the app and widget share data through a
-  plain file (`~/Library/Application Support/ClaudeUsage/`) instead of an
+  plain file (`~/Library/Application Support/AIMeter/`) instead of an
   App Group: Apple restricts the App Groups capability to paid accounts,
   and this app deliberately avoids needing it. The widget extension
   target is still App-Sandboxed — macOS requires that for a WidgetKit
@@ -64,7 +64,7 @@ which requires an Admin API key from an API organization.
   gallery) — it just reaches the shared file via a
   `com.apple.security.temporary-exception.files.home-relative-path.read-write`
   entitlement instead of an App Group container. See
-  `Widget/ClaudeUsageWidgetExtension/ClaudeUsageWidgetExtension.entitlements`.
+  `Widget/AIMeterWidgetExtension/AIMeterWidgetExtension.entitlements`.
   The main menu bar app target is not sandboxed.
 
 ### 2. Bundle identifier and Team ID
@@ -100,22 +100,22 @@ double-click it → the **Organizational Unit** field is your Team ID.
 
 ```sh
 xcodegen generate
-open ClaudeUsage.xcodeproj
+open AIMeter.xcodeproj
 ```
 
-In Xcode, for **both** targets (`ClaudeUsageMenuBar` and
-`ClaudeUsageWidgetExtension`), confirm Signing & Capabilities shows your
+In Xcode, for **both** targets (`AIMeterMenuBar` and
+`AIMeterWidgetExtension`), confirm Signing & Capabilities shows your
 Team selected (it should already be filled in from `DEVELOPMENT_TEAM` in
 `project.yml`) with no red errors. No other capabilities need adding —
 there's no App Group or Keychain Sharing group to configure.
 
-Build and run (`ClaudeUsageMenuBar` scheme). To confirm signing actually
+Build and run (`AIMeterMenuBar` scheme). To confirm signing actually
 took (not just that Xcode shows no error), you can check from Terminal
 after building:
 
 ```sh
-codesign -dvv /path/to/ClaudeUsageMenuBar.app 2>&1 | grep TeamIdentifier
-codesign -dvv /path/to/ClaudeUsageMenuBar.app/Contents/PlugIns/ClaudeUsageWidgetExtension.appex 2>&1 | grep TeamIdentifier
+codesign -dvv /path/to/AIMeterMenuBar.app 2>&1 | grep TeamIdentifier
+codesign -dvv /path/to/AIMeterMenuBar.app/Contents/PlugIns/AIMeterWidgetExtension.appex 2>&1 | grep TeamIdentifier
 ```
 
 Both should print your real Team ID (not "not set") — if either shows
@@ -128,7 +128,7 @@ com.apple.widgetkit-extension` will print nothing for it).
 The exact undocumented claude.ai endpoint this app calls needs to be
 captured from a live, logged-in browser session — see
 [`Docs/ENDPOINT_NOTES.md`](Docs/ENDPOINT_NOTES.md) for how, and fill in
-`ClaudeUsageEndpoints.swift` / `ClaudeUsageAPIClient.swift` to match once you
+`AIMeterEndpoints.swift` / `AIMeterAPIClient.swift` to match once you
 have it.
 
 ### 5. Add the widget
@@ -161,19 +161,19 @@ distribution flow:
   - **Easiest: [GitHub Releases](https://github.com/terrykhm/claude-token-usage-mac-widget/releases/latest)**
     — download the zip, unzip it, double-click **"AI Meter
     Installer.app"** (a small native app, not a Terminal script — it has
-    its own proper icon). It moves `ClaudeUsageMenuBar.app` to
+    its own proper icon). It moves `AIMeterMenuBar.app` to
     /Applications, clears its quarantine flag, and launches it. The
     installer app itself will still trigger one "unidentified developer"
     warning the first time (right-click → Open to clear it) since it's
     also a file downloaded from the internet — that one click is as far
     as this can be automated without paid notarization.
   - **Manual:** grab just the app —
-    [`dist/ClaudeUsageMenuBar.app`](dist/ClaudeUsageMenuBar.app) is the
+    [`dist/AIMeterMenuBar.app`](dist/AIMeterMenuBar.app) is the
     same build checked directly into the repo (a plain `git clone` gets
     you a working copy without needing Xcode at all) — then clear
     Gatekeeper yourself:
     ```sh
-    xattr -cr /Applications/ClaudeUsageMenuBar.app
+    xattr -cr /Applications/AIMeterMenuBar.app
     ```
     or right-click the app → **Open**, or **System Settings → Privacy &
     Security** → **Open Anyway**.
@@ -189,7 +189,7 @@ distribution flow:
 
 Either way, sign-in and the shared usage snapshot are per-machine — the
 Keychain-stored session and the file under `~/Library/Application
-Support/ClaudeUsage/` don't sync between Macs, so you'll sign in
+Support/AIMeter/` don't sync between Macs, so you'll sign in
 separately on each one.
 
 ## Troubleshooting
@@ -202,7 +202,7 @@ Cookies → `https://claude.ai`, copy the `sessionKey` value, and paste it in.
 
 **Widget shows stale data.** The widget only reads what the app last wrote;
 it never fetches on its own. The app has no menu bar icon — reopen it
-(double-click `AI Meter.app`/`ClaudeUsageMenuBar.app` again in Finder or
+(double-click `AI Meter.app`/`AIMeterMenuBar.app` again in Finder or
 Spotlight while it's already running) to bring up Settings and trigger a
 refresh.
 
@@ -217,13 +217,13 @@ are actually signed with your real Team ID (step 3 above) and it's still
 missing, force a re-scan:
 
 ```sh
-pluginkit -a /path/to/ClaudeUsageMenuBar.app/Contents/PlugIns/ClaudeUsageWidgetExtension.appex
-pluginkit -m -v -p com.apple.widgetkit-extension | grep -i claude
+pluginkit -a /path/to/AIMeterMenuBar.app/Contents/PlugIns/AIMeterWidgetExtension.appex
+pluginkit -m -v -p com.apple.widgetkit-extension | grep -i aimeter
 ```
 
-The second command should print a line for `com.terrykhm.claudeusage.widget`
+The second command should print a line for `com.terrykhm.aimeter.widget`
 (or your own bundle prefix). If it still prints nothing, check
-`Widget/ClaudeUsageWidgetExtension/ClaudeUsageWidgetExtension.entitlements`
+`Widget/AIMeterWidgetExtension/AIMeterWidgetExtension.entitlements`
 exists and is wired up via `CODE_SIGN_ENTITLEMENTS` in `project.yml` — the
 widget target must have App Sandbox enabled for registration to work at
 all, even though the main app deliberately isn't sandboxed.
