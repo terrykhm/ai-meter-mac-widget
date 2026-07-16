@@ -27,11 +27,6 @@ same way claude.ai's own web app does after you sign in in a browser.
 - Intended for personal, read-only use — checking your own account status,
   not sending messages or accessing anyone else's data.
 
-Prefer something official? The
-[Anthropic Usage & Cost / Rate Limits Admin API](https://platform.claude.com/docs/en/manage-claude/usage-cost-api)
-covers API/organization billing usage (not personal Pro/Max limits) with an
-Admin API key from an API organization.
-
 ## Install
 
 1. Download `AI-Meter.zip` from the
@@ -44,10 +39,6 @@ Admin API key from an API organization.
    account, then add the widget: open Notification Center (or your
    desktop) → **Edit Widgets** → search "AI Meter" → add the Small,
    Medium, or Large size.
-
-Every release is signed with a Developer ID certificate and notarized by
-Apple, so it opens normally — no Gatekeeper warnings, no "unidentified
-developer" dialogs, no developer account needed on your end.
 
 <details>
 <summary>Prefer Terminal?</summary>
