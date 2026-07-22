@@ -12,6 +12,31 @@ login. Built to grow into other providers (Gemini, ChatGPT, ...) over time.
      session % used and time-until-reset, on a normal macOS desktop. -->
 ![AI Meter Claude usage widget showing session percentage used and time until reset on macOS desktop](Docs/images/widget-menubar.png)
 
+## Install / Set Up
+
+1. Download `AI-Meter.zip` from the
+   [latest release](https://github.com/terrykhm/ai-meter-mac-widget/releases/latest).
+2. Double-click it in Finder to unzip, then drag `AI Meter.app` into
+   Applications
+3. Open **AI Meter** from Applications and sign in with your claude.ai
+   account, then add the widget: open Notification Center (or your
+   desktop) → **Edit Widgets** → search "AI Meter" → add the Small,
+   Medium, or Large size.
+
+4. Click the AI Meter logo on the widget to access the sign-in page.
+
+This always grabs whatever the latest release is, so it doesn't go stale
+as new versions ship.
+</details>
+
+<!-- Screenshot: replace with an actual PNG at Docs/images/sign-in-flow.png.
+     Suggested content: the menu bar app's sign-in screen (or the
+     "Enter session key manually" fallback) right after first launch. -->
+![AI Meter sign-in screen for connecting your Claude.ai account on macOS](Docs/images/sign-in-flow.png)
+
+Sign-in and the shared usage snapshot are per-machine — if you install on
+more than one Mac, you'll sign in separately on each one.
+
 ## Disclosure — please read before using
 
 Claude.ai doesn't publish an official API for your personal plan's
@@ -26,44 +51,6 @@ same way claude.ai's own web app does after you sign in in a browser.
   this app, and is only ever sent to `claude.ai` itself.
 - Intended for personal, read-only use — checking your own account status,
   not sending messages or accessing anyone else's data.
-
-## Install
-
-1. Download `AI-Meter.zip` from the
-   [latest release](https://github.com/terrykhm/ai-meter-mac-widget/releases/latest).
-2. Double-click it in Finder to unzip, then drag `AI Meter.app` into
-   Applications. (Dragging via Finder — rather than launching it in place
-   from wherever it unzipped — avoids macOS's App Translocation, which can
-   otherwise make the widget's registration disappear after a reboot.)
-3. Open **AI Meter** from Applications and sign in with your claude.ai
-   account, then add the widget: open Notification Center (or your
-   desktop) → **Edit Widgets** → search "AI Meter" → add the Small,
-   Medium, or Large size.
-
-<details>
-<summary>Prefer Terminal?</summary>
-
-```sh
-curl -fsSL -o /tmp/AIMeter.zip https://github.com/terrykhm/ai-meter-mac-widget/releases/latest/download/AI-Meter.zip && \
-ditto -x -k /tmp/AIMeter.zip /tmp/AIMeter-extracted && \
-xattr -cr "/tmp/AIMeter-extracted/AI Meter.app" && \
-rm -rf "/Applications/AI Meter.app" && \
-mv "/tmp/AIMeter-extracted/AI Meter.app" /Applications/ && \
-open "/Applications/AI Meter.app" && \
-rm -rf /tmp/AIMeter-extracted /tmp/AIMeter.zip
-```
-
-This always grabs whatever the latest release is, so it doesn't go stale
-as new versions ship.
-</details>
-
-<!-- Screenshot: replace with an actual PNG at Docs/images/sign-in-flow.png.
-     Suggested content: the menu bar app's sign-in screen (or the
-     "Enter session key manually" fallback) right after first launch. -->
-![AI Meter sign-in screen for connecting your Claude.ai account on macOS](Docs/images/sign-in-flow.png)
-
-Sign-in and the shared usage snapshot are per-machine — if you install on
-more than one Mac, you'll sign in separately on each one.
 
 ## Troubleshooting
 
@@ -86,7 +73,7 @@ launched via macOS's App Translocation instead of running from
 /Applications. Quit it, delete it, and reinstall by dragging it into
 /Applications from Finder rather than running it in place.
 
-## Building from source
+## Building from source locally
 
 Requires Xcode, [XcodeGen](https://github.com/yonaskolb/XcodeGen)
 (`brew install xcodegen`), and an Apple ID signed into Xcode — a free
