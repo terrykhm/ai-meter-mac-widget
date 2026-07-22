@@ -1,5 +1,6 @@
 import Foundation
 import AppKit
+import WebKit
 import WidgetKit
 import AIMeterKit
 
@@ -79,6 +80,11 @@ final class AppState: ObservableObject {
 
     func signOut() {
         keychain.clear()
+        WKWebsiteDataStore.default().removeData(
+            ofTypes: WKWebsiteDataStore.allWebsiteDataTypes(),
+            modifiedSince: .distantPast,
+            completionHandler: {}
+        )
         coordinator.stopPolling()
         coordinator.clearCachedState()
         widgetPresenceTask?.cancel()
