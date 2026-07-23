@@ -17,13 +17,26 @@ login. Built to grow into other providers (Gemini, ChatGPT, ...) over time.
 1. Download `AI-Meter.zip` from the
    [latest release](https://github.com/terrykhm/ai-meter-mac-widget/releases/latest).
 2. Double-click it in Finder to unzip, then drag `AI Meter.app` into
-   Applications
+   Applications.
 3. Open **AI Meter** from Applications and sign in with your claude.ai
    account, then add the widget: open Notification Center (or your
    desktop) → **Edit Widgets** → search "AI Meter" → add the Small,
    Medium, or Large size.
+4. Already added the widget but not signed in? Click the AI Meter logo
+   on the widget itself to jump straight to the sign-in screen.
 
-4. Click the AI Meter logo on the widget to access the sign-in page.
+<details>
+<summary>Prefer Terminal?</summary>
+
+```sh
+curl -fsSL -o /tmp/AIMeter.zip https://github.com/terrykhm/ai-meter-mac-widget/releases/latest/download/AI-Meter.zip && \
+ditto -x -k /tmp/AIMeter.zip /tmp/AIMeter-extracted && \
+xattr -cr "/tmp/AIMeter-extracted/AI Meter.app" && \
+rm -rf "/Applications/AI Meter.app" && \
+mv "/tmp/AIMeter-extracted/AI Meter.app" /Applications/ && \
+open "/Applications/AI Meter.app" && \
+rm -rf /tmp/AIMeter-extracted /tmp/AIMeter.zip
+```
 
 This always grabs whatever the latest release is, so it doesn't go stale
 as new versions ship.
