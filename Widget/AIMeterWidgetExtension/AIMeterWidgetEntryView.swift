@@ -238,6 +238,8 @@ private struct MediumSignedInView: View {
                 }
             }
 
+            UsageCreditRow(snapshot: snapshot, fontSize: 9)
+
             LastUpdatedRow(snapshot: snapshot, isStale: isStale, fontSize: 9)
         }
     }
@@ -277,10 +279,37 @@ private struct LargeSignedInView: View {
                 Spacer(minLength: 0)
             }
 
+            UsageCreditRow(snapshot: snapshot)
+
             Spacer(minLength: 0)
 
             Divider()
             LastUpdatedRow(snapshot: snapshot, isStale: isStale)
+        }
+    }
+}
+
+/// Shown below the usage bars/ring when the account has Usage Credits
+/// (pay-per-use billing) active. Hidden entirely when credits are off so
+/// the layout stays unchanged for most users.
+private struct UsageCreditRow: View {
+    var snapshot: UsageSnapshot
+    var fontSize: CGFloat = 9.5
+
+    var body: some View {
+        if snapshot.usageCreditEnabled, let spent = snapshot.usageCreditSpent {
+            HStack(spacing: 4) {
+                Image(systemName: "dollarsign.circle")
+                    .font(.system(size: fontSize - 0.5))
+                    .foregroundStyle(UsageColors.textSecondary(0.6))
+                Text("Usage credits")
+                    .font(.system(size: fontSize))
+                    .foregroundStyle(UsageColors.textSecondary(0.6))
+                Spacer(minLength: 4)
+                Text("\(UsageFormatting.creditSpentString(amount: spent, currency: snapshot.usageCreditCurrency)) spent")
+                    .font(.system(size: fontSize, weight: .medium))
+                    .foregroundStyle(UsageColors.textPrimary)
+            }
         }
     }
 }

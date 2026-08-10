@@ -113,11 +113,17 @@ public final class AIMeterAPIClient: AIMeterClient {
             dto.fiveHour.map { WindowUsage(kind: .fiveHour, utilization: $0.utilization / 100, resetsAt: $0.resetsAt) },
             dto.sevenDay.map { WindowUsage(kind: .sevenDay, utilization: $0.utilization / 100, resetsAt: $0.resetsAt) }
         ].compactMap { $0 }
+        let creditEnabled = dto.spend?.enabled ?? false
+        let creditSpent = dto.spend?.used.map { Double($0.amountMinor) / pow(10.0, Double($0.exponent)) }
+        let creditCurrency = dto.spend?.used?.currency
         return UsageSnapshot(
             windows: windows,
             fetchedAt: Date(),
             organizationId: organizationId,
-            planName: planName
+            planName: planName,
+            usageCreditEnabled: creditEnabled,
+            usageCreditSpent: creditSpent,
+            usageCreditCurrency: creditCurrency
         )
     }
 
@@ -162,10 +168,12 @@ private struct OrganizationDTO: Decodable {
 private struct UsageResponseDTO: Decodable {
     let fiveHour: WindowDTO?
     let sevenDay: WindowDTO?
+    let spend: SpendDTO?
 
     enum CodingKeys: String, CodingKey {
         case fiveHour = "five_hour"
         case sevenDay = "seven_day"
+        case spend
     }
 
     struct WindowDTO: Decodable {
@@ -175,6 +183,23 @@ private struct UsageResponseDTO: Decodable {
         enum CodingKeys: String, CodingKey {
             case utilization
             case resetsAt = "resets_at"
+        }
+    }
+
+    struct SpendDTO: Decodable {
+        let enabled: Bool
+        let used: MoneyDTO?
+
+        struct MoneyDTO: Decodable {
+            let amountMinor: Int
+            let currency: String
+            let exponent: Int
+
+            enum CodingKeys: String, CodingKey {
+                case amountMinor = "amount_minor"
+                case currency
+                case exponent
+            }
         }
     }
 }

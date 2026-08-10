@@ -10,19 +10,31 @@ public struct UsageSnapshot: Codable, Equatable {
     public let organizationId: String
     public let organizationName: String?
     public let planName: String?
+    /// Whether the account has Usage Credits (pay-per-use billing) enabled.
+    public let usageCreditEnabled: Bool
+    /// Total dollars spent via Usage Credits in the current billing period.
+    public let usageCreditSpent: Double?
+    /// ISO 4217 currency code for `usageCreditSpent` (e.g. "USD").
+    public let usageCreditCurrency: String?
 
     public init(
         windows: [WindowUsage],
         fetchedAt: Date,
         organizationId: String,
         organizationName: String? = nil,
-        planName: String? = nil
+        planName: String? = nil,
+        usageCreditEnabled: Bool = false,
+        usageCreditSpent: Double? = nil,
+        usageCreditCurrency: String? = nil
     ) {
         self.windows = windows
         self.fetchedAt = fetchedAt
         self.organizationId = organizationId
         self.organizationName = organizationName
         self.planName = planName
+        self.usageCreditEnabled = usageCreditEnabled
+        self.usageCreditSpent = usageCreditSpent
+        self.usageCreditCurrency = usageCreditCurrency
     }
 
     /// The window with the highest utilization — mirrors Anthropic's own

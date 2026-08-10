@@ -48,6 +48,9 @@ final class AIMeterAPIClientTests: XCTestCase {
         XCTAssertEqual(snapshot.windows.count, 2)
         XCTAssertEqual(snapshot.fiveHourWindow?.percentInt, 40)
         XCTAssertEqual(snapshot.sevenDayWindow?.percentInt, 5)
+        XCTAssertFalse(snapshot.usageCreditEnabled)
+        XCTAssertEqual(snapshot.usageCreditSpent, 0.0)
+        XCTAssertEqual(snapshot.usageCreditCurrency, "USD")
     }
 
     // Redacted, real response captured from GET /api/organizations —
